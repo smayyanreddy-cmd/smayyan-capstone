@@ -82,12 +82,20 @@ export default function ProjectPage() {
         )}
 
         <form onSubmit={upload} className="mt-8 flex flex-col gap-3">
-          <input
-            type="file"
-            accept="image/*"
-            onChange={(e) => setFile(e.target.files?.[0] ?? null)}
-            className="text-sm"
-          />
+          <label className="flex cursor-pointer items-center gap-3 rounded border border-dashed border-zinc-300 px-4 py-3 text-sm text-zinc-600 hover:border-zinc-400 hover:bg-zinc-100 dark:border-zinc-700 dark:text-zinc-400 dark:hover:border-zinc-600 dark:hover:bg-zinc-900">
+            <span className="rounded bg-zinc-200 px-3 py-1.5 font-medium text-zinc-800 dark:bg-zinc-800 dark:text-zinc-100">
+              Choose image
+            </span>
+            <span className="truncate">
+              {file ? file.name : "No file selected"}
+            </span>
+            <input
+              type="file"
+              accept="image/*"
+              onChange={(e) => setFile(e.target.files?.[0] ?? null)}
+              className="hidden"
+            />
+          </label>
           <input
             className="rounded border border-zinc-300 px-3 py-2 dark:border-zinc-700 dark:bg-zinc-900 dark:text-white"
             placeholder="Optional note (e.g. 'darker palette, felt too clean before')"
