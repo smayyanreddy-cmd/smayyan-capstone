@@ -29,6 +29,7 @@ export default function ProjectPage() {
   const [file, setFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
   const [related, setRelated] = useState<RelatedItem[] | null>(null);
+  const [expanded, setExpanded] = useState<Item | null>(null);
 
   async function load() {
     const res = await fetch(`/api/projects/${id}`);
@@ -71,9 +72,17 @@ export default function ProjectPage() {
   return (
     <div className="min-h-screen bg-zinc-50 dark:bg-black">
       <main className="mx-auto max-w-2xl px-6 py-16">
-        <Link href="/" className="text-sm text-zinc-500 hover:underline">
-          &larr; All projects
-        </Link>
+        <div className="flex items-center justify-between">
+          <Link href="/" className="text-sm text-zinc-500 hover:underline">
+            &larr; All projects
+          </Link>
+          <Link
+            href={`/projects/${id}/documentation`}
+            className="text-sm font-medium text-black hover:underline dark:text-zinc-50"
+          >
+            Documentation &rarr;
+          </Link>
+        </div>
         <h1 className="mt-2 text-2xl font-semibold text-black dark:text-zinc-50">
           {project.name}
         </h1>
@@ -140,7 +149,8 @@ export default function ProjectPage() {
               <img
                 src={item.image_path}
                 alt=""
-                className="h-24 w-24 rounded object-cover"
+                onClick={() => setExpanded(item)}
+                className="h-24 w-24 cursor-pointer rounded object-cover transition-opacity hover:opacity-80"
               />
               <div>
                 <div className="text-xs text-zinc-500">
@@ -162,6 +172,29 @@ export default function ProjectPage() {
           )}
         </ol>
       </main>
+
+      {expanded && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-6"
+          onClick={() => setExpanded(null)}
+        >
+          <div className="flex max-h-full max-w-3xl flex-col items-center gap-3">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={expanded.image_path}
+              alt=""
+              className="max-h-[80vh] max-w-full rounded object-contain"
+              onClick={(e) => e.stopPropagation()}
+            />
+            <div className="text-center text-sm text-zinc-200">
+              {expanded.description && <p>{expanded.description}</p>}
+              {expanded.phrase && (
+                <p className="italic text-zinc-400">&ldquo;{expanded.phrase}&rdquo;</p>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

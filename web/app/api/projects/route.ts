@@ -23,6 +23,8 @@ export async function POST(req: NextRequest) {
     name,
     description,
     created_at: new Date().toISOString(),
+    documentation: null,
+    documentation_generated_at: null,
   };
 
   db.prepare(

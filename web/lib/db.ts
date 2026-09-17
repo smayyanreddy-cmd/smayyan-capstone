@@ -12,7 +12,9 @@ db.exec(`
     id TEXT PRIMARY KEY,
     name TEXT NOT NULL,
     description TEXT,
-    created_at TEXT NOT NULL
+    created_at TEXT NOT NULL,
+    documentation TEXT,
+    documentation_generated_at TEXT
   );
 
   CREATE TABLE IF NOT EXISTS items (
@@ -31,6 +33,8 @@ export type Project = {
   name: string;
   description: string | null;
   created_at: string;
+  documentation: string | null;
+  documentation_generated_at: string | null;
 };
 
 export type Item = {
