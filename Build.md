@@ -1,6 +1,6 @@
  Build Log
 
-A running log of progress on the Car Modification Visualiser capstone. See `Plan.md` for the full plan.
+A running log of progress on the Creative Continuity Agent capstone (originally scoped as a Car Modification Visualiser — see the 2026-09-17 entry for the pivot). See `Plan.md` for the full current plan.
 
 ## 2026-09-11
 
