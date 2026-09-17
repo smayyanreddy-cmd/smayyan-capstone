@@ -1,68 +1,99 @@
-# Car Modification Visualiser — Capstone Plan
+# Project Plan: Creative Continuity Agent
 
-## Context
+## Problem
+Creative ideas — sketches, AI-render experiments, references, half-formed thoughts —
+are scattered across notebooks, phone photos, chat histories, and memory. Nothing
+connects them over time, so patterns and evolutions in an ongoing concept (e.g. a
+recurring character or a design series) get lost instead of noticed.
 
-Car enthusiasts often want to see how a modification (wheels, wrap color, lowering, body kit, etc.) will look on their actual car before spending money on it. This capstone builds a web app where a user uploads a photo of their car, picks mods from a structured menu, and an AI image-editing model generates a realistic "after" photo — so they can compare before/after and save builds to a personal garage. The repo (`smayyan-capstone`) started empty, so this is a greenfield build with no existing code or patterns to reuse.
+## Core Idea
+Not another moodboard/notebook app. The differentiator is an AI layer that:
+1. Ingests creative material with near-zero friction
+2. Clusters it by visual + conceptual similarity
+3. Tracks how a concept evolves over time
+4. Resurfaces related past work at the moment it's useful — not on a schedule
 
-## Chosen Approach
+## Wedge (start narrow)
+Nail ONE use case first: **tracking the evolution of any single ongoing project
+that's actively being documented** (proof case: your own SR project + automotive
+fusion sketches), rather than trying to be a general creative tool.
 
-- **Visualisation mechanic**: AI image generation/editing. User uploads a photo; selected mods are turned into a structured edit instruction; an image-editing model (reference-image-in, edited-image-out) produces the "after" photo. This gives realistic results without needing a 3D asset pipeline.
-- **Tech stack**: **Next.js (App Router) + TypeScript**, single full-stack app.
-  - Why: one deployable app (frontend + API routes/server actions), easy to host on Vercel, minimal boilerplate compared to separate React+Express, and it's the most common stack for this kind of AI-integrated web app — good for a capstone demo and for iterating quickly.
-  - Styling: Tailwind CSS.
-  - Auth: NextAuth (email/password or GitHub/Google OAuth) — needed since this is a full capstone with saved builds per user.
-  - Database: Postgres via Supabase (also gives free file storage for uploaded/generated images in one service) + Prisma as the ORM.
-  - Image generation: an image-editing-capable model (e.g. Gemini 2.5 Flash Image or OpenAI's image edit endpoint) called from a server-side API route — never expose the API key to the client.
-  - Deployment: Vercel (frontend + API routes) with Supabase as the managed DB/storage backend.
+## MVP Scope (v1)
+- [ ] **Ingestion**: upload a photo directly on the web interface → lands in
+      one store, auto-tagged, no manual filing
+- [ ] **Context capture**: optional one-line voice/text phrase attached to each
+      item; AI combines phrase + image into its own short description ("why"
+      behind the image, not just the image, and not just the raw phrase)
+- [ ] **Clustering**: group items by visual similarity (image embeddings) +
+      conceptual similarity (LLM reads captions/context)
+- [ ] **Evolution view**: timeline showing how one concept/character changed across
+      entries, reconstructed automatically
+- [ ] **Contextual resurfacing**: when opening/adding a new related sketch, surface
+      the 2–3 most relevant past pieces — triggered by activity, not a calendar ping
 
-## Data Model (Prisma schema, high level)
+## User Flow
+1. **Start a project** — name it (e.g. "SR", "Skyline/Silvia fusion") with a
+   one-line description; this becomes the anchor everything attaches to.
+2. **Capture an item** — upload a photo (sketch, screenshot, render) on the
+   web interface, with an optional short phrase alongside it ("darker palette,
+   felt too clean before"). The AI combines the photo + phrase and writes its
+   own short description of the item — capturing what's visually there and the
+   intent behind it, not just storing the raw phrase.
+3. **Provisional tagging** — using that description plus similarity to past
+   entries, the AI takes a first guess at which project the item belongs to.
+4. **Lightweight confirmation** — right after upload (or in a quick review
+   queue), it shows "Added to SR — is that right?"; one click to confirm or
+   reassign, keeping tagging honest without making capture a chore.
+5. **Working session** — when you open a project to add something new, the AI
+   surfaces the 2–3 most relevant past entries (using their descriptions +
+   images), each shown with its own generated description so you don't have to
+   re-open every file to remember what it was.
+6. **Evolution view** — a timeline per project showing every entry in order,
+   each with its AI-written description, so the visible change in the concept
+   over time is readable at a glance, not just a wall of images.
+7. **Proactive pattern flag** — occasionally, when confidence is high, the AI
+   points out a connection you didn't consciously make ("this shares the color
+   shift you tried in March on a different project") — rare and specific, not
+   frequent.
 
-- `User` — id, email, name, auth fields (managed by NextAuth adapter tables)
-- `Car` — id, userId, make, model, year, baseImageUrl
-- `Build` — id, carId, userId, mods (JSON: category → selected option), generatedImageUrl, prompt (stored for debugging/regeneration), createdAt, isPublic
-- `ModOption` (seed data, not user-editable) — category (wheels, paint/wrap, ride height, body kit, exhaust tips, window tint, spoiler), label, promptFragment
+## Explicitly Out of Scope (v1)
+- General-purpose notebook / mood-board features (drawing tools, templates, etc.)
+- Multi-user / team collaboration
+- Notifications or scheduled digests
 
-## Application Structure
+## Architecture Sketch
+Single web interface handling both capture and viewing:
 
-```
-app/
-  (auth)/            # sign in / sign up pages
-  dashboard/          # user's garage: list of cars & saved builds
-  cars/[carId]/       # car detail, upload photo, start new build
-  builds/[buildId]/   # before/after view of a specific build
-  gallery/            # public builds feed
-  api/
-    generate/route.ts # POST: photo + mod selections -> calls image model -> returns image url, persists Build
-    cars/route.ts
-    builds/route.ts
-lib/
-  prisma.ts
-  auth.ts
-  image-gen.ts        # builds the prompt from mod selections, calls the model, uploads result to storage
-  mod-options.ts       # static catalog of mod categories/options + their prompt fragments
-components/
-  Uploader.tsx
-  ModSelector.tsx      # category tabs (wheels, color, stance, etc.)
-  BeforeAfterSlider.tsx
-  GarageGrid.tsx
-prisma/
-  schema.prisma
-```
+- **Capture**: upload flow on the web interface — photo + optional phrase,
+  no separate chat bot needed
+- **Ingestion pipeline**: upload → object storage (S3) for images, plus the
+  raw phrase passed to the LLM layer
+- **Metadata store**: Postgres — item, timestamp, linked project,
+  user phrase, AI-generated description
+- **Embeddings**: image embedding model (e.g. CLIP) for visual similarity search
+- **LLM layer** (Claude): combines phrase + image into a description, assigns
+  conceptual tags, writes short "why this connects" explanations when resurfacing
+- **Frontend**: project pages, capture/upload flow, cluster view, evolution
+  timeline, and confirmation of provisional tags — all in one interface
+- **Confirmation loop**: shown immediately after upload, or batched into a
+  review queue on the same interface
 
-Core flow: `Uploader` → `ModSelector` (builds a mods JSON object) → POST `/api/generate` → `lib/image-gen.ts` composes a structured prompt from `mod-options.ts` fragments + calls the image model with the original photo as reference → stores result in Supabase Storage → creates a `Build` row → returns image URL → `BeforeAfterSlider` displays result → user can save/discard.
+## Validation Step (before building anything else)
+Feed in existing personal material (SR pieces, Skyline/Silvia sketches, Activa
+render, past captions) and check: does the clustering/evolution view surprise you
+with your own work? If it doesn't reveal something you didn't already know, refine
+the similarity/resurfacing logic before expanding scope.
 
-## Milestones
+## Open Questions
+- What counts as "conceptually related" beyond visual similarity — style, subject,
+  mood, or explicit character identity?
+- What's the right resurfacing trigger so it feels helpful, not noisy?
+- Single-user tool first, or built with multi-project structure from day one?
 
-1. **Scaffold**: Next.js + TypeScript + Tailwind app, Prisma schema, Supabase project wired up, NextAuth working (sign up/sign in), deployed skeleton on Vercel.
-2. **Core visualize flow (single mod category)**: upload photo, pick a wheel style + paint color, call the image model, display before/after. Get prompt engineering solid for one category before expanding — this is the highest-risk/most-uncertain part (image model realism/consistency).
-3. **Expand mod categories**: ride height, body kit, exhaust tips, window tint, spoiler — extend `mod-options.ts` and refine prompt composition so multiple mods combine coherently in one edit.
-4. **Garage & persistence**: save builds per car/user, list/revisit past builds, delete/regenerate.
-5. **Gallery & sharing**: opt-in public builds feed, view other users' builds.
-6. **Polish & testing**: loading/error states for slow image generation, responsive UI, basic tests for API routes, README + deployment docs.
-
-## Verification
-
-- Run locally with `npm run dev`; manually walk the golden path: sign up → add a car → upload a photo → pick mods → generate → view before/after → save to garage → confirm it appears in the garage list.
-- Test edge cases: no photo uploaded, image model failure/timeout (should show a retry/error state, not crash), very large uploaded images (should resize/compress before sending to the model), and unauthenticated access to `/dashboard` (should redirect to sign in).
-- Check that generated images and original photos persist correctly in Supabase Storage across a page reload.
-- Confirm API keys (image model, Supabase, NextAuth secrets) are only referenced server-side (`.env`, never in client bundles) — grep the client bundle or check `NEXT_PUBLIC_` prefixes are not used for secrets.
+## Next Steps
+1. Manually gather existing SR + automotive material into one folder as a test set
+2. Prototype clustering only (no upload pipeline yet) to validate the concept
+3. If clustering reveals something useful → build the web interface's
+   upload flow first (proves the ingestion + description-generation loop)
+4. Build out the rest of the web interface (cluster view, evolution timeline)
+   once there's enough captured material to make it worth looking at
