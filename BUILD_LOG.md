@@ -1,6 +1,8 @@
  Build Log
 
-A running log of progress on the Car Modification Visualiser capstone. See `Plan.md` for the full plan.
+A running log of progress on the Creative Continuity Agent capstone (originally scoped as a Car Modification Visualiser — see the 2026-09-17 entry for the pivot). See `Plan.md` for the full current plan.
+
+Entries from 2026-09-17 onward follow this format: date, approx time spent, approx tokens used, what shipped, and one honest note on what broke on the first try. Earlier entries predate this format and are kept as-is below for history.
 
 ## 2026-09-11
 
@@ -40,3 +42,14 @@ A running log of progress on the Car Modification Visualiser capstone. See `Plan
 - Verified end-to-end with a real image (a moodboard grid of colorful lamp designs): Gemini produced an accurate one-line description ("a collection of colorful, modern, and uniquely shaped light fixtures..."), confirming the description feature genuinely works now, not just that it doesn't crash.
 - Added two more requested features: a click-to-expand lightbox for timeline images (click a thumbnail → full-size overlay with its description/note, click outside to close), and a **documentation generator** — a dedicated `/projects/[id]/documentation` page with a "Generate documentation" button that sends every entry's description/note/date to Gemini and asks it to write a short markdown-formatted narrative of how the project evolved (intro, chronological turning points, closing reflection), rendered with `react-markdown`. The result is saved on the project (`documentation`, `documentation_generated_at` columns) so it persists and can be regenerated.
 - Verified with 3 real entries from Emotion Spiral: the generated documentation correctly picked out a real arc across the images (moodboard → 3D-printed prototypes → circuit/perfboard soldering) rather than just restating each entry — a good sign the "evolution" framing from the plan is actually working, not just template filler.
+
+## 2026-09-17 — AI-Involvement exercise (Assessment 2)
+
+- **Time spent**: ~1 hour (approx — not precisely tracked; covers the Skill/agent/workflow exercise and the git-discipline cleanup below, on top of the app work logged above).
+- **Tokens used**: not measured by any tool available in this session — no real figure to report here honestly, rather than guessing one.
+- **Shipped**:
+  - A custom Skill (`.claude/skills/gather-references/SKILL.md`) scoped to one repeatable task: given a single Creative Continuity Agent project, search the web for creative reference material relevant to where it currently stands, and stage candidates in a review file — never writing to the app's database directly.
+  - A subagent definition (`.claude/agents/reference-gatherer.md`) that runs that skill as a real multi-step loop (perceive project state via the app's API → reason about a search angle → act via a web connector → observe the staging file → repeat, minimum 2 passes), rather than a one-shot prompt.
+  - Ran the loop end-to-end against a real project ("Emotion Spiral", 2 real entries in the running app) using two connectors — `WebSearch` and, once that failed, `WebFetch` as a fallback — plus the local filesystem for staging output. Result: `reference-candidates/emotion-spiral.md`, a real, non-fabricated output from an actual run.
+  - Git discipline: the app work above had been committed straight onto one long-running branch. This exercise's work (the Skill/agent/staging-run, the stale build-log header fix, and this `BUILD_LOG.md` rename/reformat) lives on `Assessment-2-Smayyan`, branched from the Assessment 1 merge point, to be submitted as its own PR into `main`.
+- **What broke on the first try, and what changed**: the custom Skill and subagent files I created weren't picked up by the running session — Claude Code only discovers new `.claude/skills/` and `.claude/agents/` files at session start, so `Skill("gather-references")` and `Agent({subagent_type: "reference-gatherer"})` both failed with "not found" in the same session that created them. Rather than wait for a reload, I ran the loop myself in the main session using the exact same tools the subagent would have used (WebSearch/WebFetch/Bash/Read/Write), following the skill file's instructions literally, so there'd still be a real, verifiable end-to-end run today. Separately, `WebSearch` itself returned "unavailable" for the actual query mid-run; instead of inventing search results to hit the target candidate count, I fell back to `WebFetch` against real Wikipedia pages and logged the shortfall (2 candidates instead of the target 5, one planned pass skipped) directly in the staging file rather than papering over it.
