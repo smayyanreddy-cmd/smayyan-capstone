@@ -11,6 +11,7 @@ type Item = {
   id: string;
   project_id: string;
   image_path: string;
+  cropped_image_path: string | null;
   phrase: string | null;
   description: string | null;
   created_at: string;

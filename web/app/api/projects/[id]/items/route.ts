@@ -52,6 +52,7 @@ export async function POST(
     id: itemId,
     project_id: projectId,
     image_path: imagePath,
+    cropped_image_path: null,
     phrase,
     description,
     embedding: JSON.stringify(embedding),

@@ -2,7 +2,7 @@ import type { Item, Project } from "@/lib/db";
 
 export type SlideItem = Pick<
   Item,
-  "id" | "image_path" | "phrase" | "description" | "created_at"
+  "id" | "image_path" | "cropped_image_path" | "phrase" | "description" | "created_at"
 >;
 
 export type Slide =

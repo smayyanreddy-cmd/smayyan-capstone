@@ -1,6 +1,7 @@
 import type { Slide } from "@/lib/slides";
 
 const BG = "#15130f";
+const SURFACE = "#1e1b16";
 const ACCENT = "#e0ac1f";
 const TEXT = "#f3f1ec";
 const MUTED = "#9c948a";
@@ -22,26 +23,31 @@ export default function SlidesPreview({ slides }: { slides: Slide[] }) {
                 style={{ background: ACCENT, opacity: 0.08 }}
               />
               <div
+                className="absolute -left-16 -top-20 h-32 w-32 rounded-full"
+                style={{ background: ACCENT, opacity: 0.06 }}
+              />
+              <div
                 className="text-[10px] font-bold uppercase tracking-[0.2em] sm:text-xs"
                 style={{ color: ACCENT }}
               >
                 Evolution documentation
               </div>
-              <div
-                className="mt-2 text-2xl font-bold sm:text-4xl"
-                style={{ color: TEXT }}
-              >
+              <div className="mt-2 text-2xl font-bold sm:text-4xl" style={{ color: TEXT }}>
                 {slide.name}
               </div>
               <div className="mt-3 h-1 w-12" style={{ background: ACCENT }} />
               {slide.description && (
-                <div
-                  className="mt-3 max-w-xl text-xs sm:text-sm"
-                  style={{ color: MUTED }}
-                >
+                <div className="mt-3 max-w-xl text-xs sm:text-sm" style={{ color: MUTED }}>
                   {slide.description}
                 </div>
               )}
+              <div
+                className="absolute inset-x-0 bottom-0 flex items-center justify-between border-t px-[4%] py-1.5 text-[8px] uppercase tracking-wider sm:text-[10px]"
+                style={{ borderColor: BORDER, color: MUTED }}
+              >
+                <span>{new Date().toLocaleDateString()}</span>
+                <span>Creative Continuity Agent</span>
+              </div>
             </div>
           )}
 
@@ -53,35 +59,45 @@ export default function SlidesPreview({ slides }: { slides: Slide[] }) {
               >
                 {slide.type === "overview" ? "“" : "”"}
               </div>
-              <div
-                className="text-base font-bold sm:text-lg"
-                style={{ color: ACCENT }}
-              >
+              <div className="text-base font-bold sm:text-lg" style={{ color: ACCENT }}>
                 {slide.type === "overview" ? "Overview" : "Reflection"}
               </div>
               <div className="mt-1 h-0.5 w-8" style={{ background: ACCENT }} />
-              <div
-                className="mt-3 max-w-2xl overflow-hidden text-[11px] leading-relaxed sm:text-sm"
-                style={{ color: TEXT }}
-              >
-                {slide.body}
+              <div className="mt-3 flex gap-3">
+                <div className="w-0.5 shrink-0 self-stretch" style={{ background: ACCENT, opacity: 0.5 }} />
+                <div
+                  className="max-w-2xl overflow-hidden text-[11px] leading-relaxed sm:text-sm"
+                  style={{ color: TEXT }}
+                >
+                  {slide.body}
+                </div>
               </div>
             </div>
           )}
 
           {slide.type === "entry" && (
             <div className="flex h-full items-center gap-[3%] px-[4%]">
-              <div className="flex h-[85%] w-[46%] shrink-0 items-center justify-center overflow-hidden rounded-lg border shadow-lg" style={{ borderColor: BORDER, background: "#1e1b16" }}>
+              <div
+                className="flex h-[85%] w-[48%] shrink-0 items-center justify-center overflow-hidden rounded-lg border shadow-lg"
+                style={{ borderColor: BORDER, background: SURFACE }}
+              >
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
-                  src={slide.item.image_path}
+                  src={slide.item.cropped_image_path ?? slide.item.image_path}
                   alt=""
-                  className="h-full w-full object-contain"
+                  className="h-full w-full object-cover"
                 />
               </div>
+              <div className="self-stretch w-0.5 shrink-0" style={{ background: ACCENT }} />
               <div className="min-w-0 flex-1">
+                <div
+                  className="text-[9px] font-bold uppercase tracking-widest sm:text-[10px]"
+                  style={{ color: MUTED }}
+                >
+                  Entry
+                </div>
                 <span
-                  className="inline-block rounded px-2 py-0.5 text-[10px] font-bold sm:text-xs"
+                  className="mt-1 inline-block rounded px-2 py-0.5 text-[10px] font-bold sm:text-xs"
                   style={{ background: ACCENT, color: BG }}
                 >
                   {String(slide.index).padStart(2, "0")} / {String(slide.total).padStart(2, "0")}

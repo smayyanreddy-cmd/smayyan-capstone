@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import db, { Item, Project } from "@/lib/db";
 import { buildDocumentationPptx } from "@/lib/pptx";
+import { ensureCroppedImages } from "@/lib/subject-crop";
 
 export async function GET(
   _req: Request,
@@ -21,9 +22,10 @@ export async function GET(
     );
   }
 
-  const items = db
+  const rawItems = db
     .prepare("SELECT * FROM items WHERE project_id = ? ORDER BY created_at ASC")
     .all(id) as Item[];
+  const items = await ensureCroppedImages(rawItems);
 
   const buffer = await buildDocumentationPptx(project, items, project.documentation);
 

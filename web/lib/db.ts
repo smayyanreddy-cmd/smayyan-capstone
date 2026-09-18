@@ -28,6 +28,13 @@ db.exec(`
   );
 `);
 
+const itemColumns = (db.prepare("PRAGMA table_info(items)").all() as { name: string }[]).map(
+  (c) => c.name
+);
+if (!itemColumns.includes("cropped_image_path")) {
+  db.exec("ALTER TABLE items ADD COLUMN cropped_image_path TEXT");
+}
+
 export type Project = {
   id: string;
   name: string;
@@ -41,6 +48,7 @@ export type Item = {
   id: string;
   project_id: string;
   image_path: string;
+  cropped_image_path: string | null;
   phrase: string | null;
   description: string | null;
   embedding: string;

@@ -5,6 +5,7 @@ import type { Item, Project } from "@/lib/db";
 import { buildSlidePlan } from "@/lib/slides";
 
 const BG = "15130F";
+const SURFACE = "1E1B16";
 const ACCENT = "E0AC1F";
 const TEXT = "F3F1EC";
 const MUTED = "9C948A";
@@ -48,11 +49,7 @@ function addFooter(
   });
 }
 
-function addSectionHeading(
-  slide: PptxGenJS.Slide,
-  pptx: PptxGenJS,
-  heading: string
-) {
+function addSectionHeading(slide: PptxGenJS.Slide, pptx: PptxGenJS, heading: string) {
   slide.addText(heading, {
     x: 0.8,
     y: 0.7,
@@ -110,7 +107,7 @@ export async function buildDocumentationPptx(
       });
       s.addText("EVOLUTION DOCUMENTATION", {
         x: 0.9,
-        y: 2.5,
+        y: 2.4,
         w: 10,
         h: 0.4,
         fontSize: 13,
@@ -120,7 +117,7 @@ export async function buildDocumentationPptx(
       });
       s.addText(slide.name, {
         x: 0.85,
-        y: 2.95,
+        y: 2.85,
         w: 11,
         h: 1.5,
         fontSize: 48,
@@ -129,7 +126,7 @@ export async function buildDocumentationPptx(
       });
       s.addShape(pptx.ShapeType.rect, {
         x: 0.9,
-        y: 4.35,
+        y: 4.25,
         w: 1.1,
         h: 0.07,
         fill: { color: ACCENT },
@@ -138,20 +135,34 @@ export async function buildDocumentationPptx(
       if (slide.description) {
         s.addText(slide.description, {
           x: 0.9,
-          y: 4.6,
+          y: 4.5,
           w: 9,
           h: 0.8,
           fontSize: 16,
           color: MUTED,
         });
       }
-      s.addText(new Date().toLocaleDateString(undefined, { year: "numeric", month: "long", day: "numeric" }), {
-        x: 0.9,
-        y: H - 1,
-        w: 6,
+      s.addShape(pptx.ShapeType.rect, {
+        x: 0,
+        y: H - 0.9,
+        w: W,
+        h: 0.01,
+        fill: { color: BORDER },
+        line: { type: "none" },
+      });
+      s.addText(
+        new Date().toLocaleDateString(undefined, { year: "numeric", month: "long", day: "numeric" }),
+        { x: 0.9, y: H - 0.7, w: 6, h: 0.4, fontSize: 11, color: MUTED }
+      );
+      s.addText("CREATIVE CONTINUITY AGENT", {
+        x: W - 5.9,
+        y: H - 0.7,
+        w: 5,
         h: 0.4,
-        fontSize: 11,
+        fontSize: 10,
         color: MUTED,
+        charSpacing: 1.5,
+        align: "right",
       });
       return;
     }
@@ -169,10 +180,18 @@ export async function buildDocumentationPptx(
         transparency: 92,
         align: "right",
       });
-      s.addText(slide.body, {
+      s.addShape(pptx.ShapeType.rect, {
         x: 0.8,
+        y: 1.95,
+        w: 0.05,
+        h: 4.5,
+        fill: { color: ACCENT, transparency: 60 },
+        line: { type: "none" },
+      });
+      s.addText(slide.body, {
+        x: 1.05,
         y: 1.9,
-        w: 11.2,
+        w: 10.95,
         h: 4.6,
         fontSize: 19,
         color: TEXT,
@@ -185,51 +204,78 @@ export async function buildDocumentationPptx(
 
     // entry slide
     const { item, index, total: itemTotal } = slide;
-    const absolutePath = path.join(process.cwd(), "public", item.image_path);
+    const imageWebPath = item.cropped_image_path ?? item.image_path;
+    const absolutePath = path.join(process.cwd(), "public", imageWebPath);
     const imageExists = fs.existsSync(absolutePath);
 
+    const frameX = 0.6;
+    const frameY = 1.28;
+    const frameW = 6.6;
+    const frameH = 4.95;
+
     s.addShape(pptx.ShapeType.rect, {
-      x: 0.5,
-      y: 0.5,
-      w: 6.4,
-      h: 6.1,
-      fill: { color: "1E1B16" },
+      x: frameX,
+      y: frameY,
+      w: frameW,
+      h: frameH,
+      fill: { color: SURFACE },
       line: { color: BORDER, width: 1 },
       shadow: {
         type: "outer",
         color: "000000",
         opacity: 0.45,
-        blur: 12,
-        offset: 4,
+        blur: 14,
+        offset: 5,
         angle: 90,
       },
     });
     if (imageExists) {
       s.addImage({
         path: absolutePath,
-        x: 0.7,
-        y: 0.7,
-        w: 6,
-        h: 5.7,
-        sizing: { type: "contain", w: 6, h: 5.7 },
+        x: frameX + 0.1,
+        y: frameY + 0.1,
+        w: frameW - 0.2,
+        h: frameH - 0.2,
+        sizing: { type: "cover", w: frameW - 0.2, h: frameH - 0.2 },
       });
     }
 
+    s.addShape(pptx.ShapeType.rect, {
+      x: frameX + frameW + 0.15,
+      y: frameY,
+      w: 0.02,
+      h: frameH,
+      fill: { color: ACCENT },
+      line: { type: "none" },
+    });
+
+    const textX = frameX + frameW + 0.55;
+    const textW = W - textX - 0.6;
+
+    s.addText("ENTRY", {
+      x: textX,
+      y: frameY,
+      w: textW,
+      h: 0.3,
+      fontSize: 11,
+      bold: true,
+      color: MUTED,
+      charSpacing: 2,
+    });
     s.addText(`${String(index).padStart(2, "0")} / ${String(itemTotal).padStart(2, "0")}`, {
       shape: pptx.ShapeType.roundRect,
       rectRadius: 0.08,
-      x: 7.35,
-      y: 0.7,
-      w: 1.5,
-      h: 0.42,
-      fontSize: 13,
+      x: textX,
+      y: frameY + 0.32,
+      w: 1.6,
+      h: 0.44,
+      fontSize: 14,
       bold: true,
       color: BG,
       fill: { color: ACCENT },
       align: "center",
       valign: "middle",
     });
-
     s.addText(
       new Date(item.created_at).toLocaleDateString(undefined, {
         year: "numeric",
@@ -237,9 +283,9 @@ export async function buildDocumentationPptx(
         day: "numeric",
       }),
       {
-        x: 7.35,
-        y: 1.35,
-        w: 5.4,
+        x: textX,
+        y: frameY + 0.94,
+        w: textW,
         h: 0.4,
         fontSize: 12,
         bold: true,
@@ -250,11 +296,11 @@ export async function buildDocumentationPptx(
 
     if (item.description) {
       s.addText(item.description, {
-        x: 7.35,
-        y: 1.85,
-        w: 5.4,
-        h: 3.2,
-        fontSize: 18,
+        x: textX,
+        y: frameY + 1.42,
+        w: textW,
+        h: 2.4,
+        fontSize: 17,
         color: TEXT,
         valign: "top",
         lineSpacingMultiple: 1.25,
@@ -263,19 +309,19 @@ export async function buildDocumentationPptx(
 
     if (item.phrase) {
       s.addShape(pptx.ShapeType.rect, {
-        x: 7.35,
-        y: 5.2,
+        x: textX,
+        y: frameY + frameH - 0.95,
         w: 0.05,
-        h: 1.1,
+        h: 0.85,
         fill: { color: ACCENT },
         line: { type: "none" },
       });
       s.addText(`“${item.phrase}”`, {
-        x: 7.6,
-        y: 5.15,
-        w: 5.1,
-        h: 1.2,
-        fontSize: 14,
+        x: textX + 0.25,
+        y: frameY + frameH - 1,
+        w: textW - 0.25,
+        h: 0.95,
+        fontSize: 13,
         italic: true,
         color: MUTED,
         valign: "top",
