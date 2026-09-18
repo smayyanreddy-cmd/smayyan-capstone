@@ -4,10 +4,22 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import ReactMarkdown from "react-markdown";
+import SlidesPreview from "@/components/SlidesPreview";
+import { buildSlidePlan } from "@/lib/slides";
+
+type Item = {
+  id: string;
+  project_id: string;
+  image_path: string;
+  phrase: string | null;
+  description: string | null;
+  created_at: string;
+};
 
 type Project = {
   id: string;
   name: string;
+  description: string | null;
   documentation: string | null;
   documentation_generated_at: string | null;
 };
@@ -15,6 +27,7 @@ type Project = {
 export default function DocumentationPage() {
   const { id } = useParams<{ id: string }>();
   const [project, setProject] = useState<Project | null>(null);
+  const [items, setItems] = useState<Item[]>([]);
   const [generating, setGenerating] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -22,6 +35,7 @@ export default function DocumentationPage() {
     const res = await fetch(`/api/projects/${id}`);
     const data = await res.json();
     setProject(data.project);
+    setItems(data.items);
   }
 
   useEffect(() => {
@@ -47,8 +61,12 @@ export default function DocumentationPage() {
     return <main className="mx-auto w-full max-w-3xl flex-1 px-6 py-12 text-muted">Loading…</main>;
   }
 
+  const slides = project.documentation
+    ? buildSlidePlan(project, items, project.documentation)
+    : null;
+
   return (
-    <main className="mx-auto w-full max-w-3xl flex-1 px-6 py-12">
+    <main className="mx-auto w-full max-w-4xl flex-1 px-6 py-12">
       <Link href={`/projects/${id}`} className="text-sm text-muted hover:text-accent">
         &larr; Back to {project.name}
       </Link>
@@ -92,27 +110,38 @@ export default function DocumentationPage() {
         </p>
       )}
 
-      {project.documentation ? (
-        <article className="mt-8 rounded-2xl border border-border bg-surface p-8 shadow-sm">
-          <ReactMarkdown
-            components={{
-              h1: (props) => (
-                <h1 className="mb-4 text-2xl font-semibold text-foreground" {...props} />
-              ),
-              h2: (props) => (
-                <h2
-                  className="mb-2 mt-8 text-lg font-semibold text-accent first:mt-0"
-                  {...props}
-                />
-              ),
-              p: (props) => <p className="mb-4 leading-7 text-foreground/90" {...props} />,
-              ul: (props) => <ul className="mb-4 list-disc pl-5" {...props} />,
-              li: (props) => <li className="mb-1 text-foreground/90" {...props} />,
-            }}
-          >
-            {project.documentation}
-          </ReactMarkdown>
-        </article>
+      {slides ? (
+        <>
+          <div className="mt-8">
+            <SlidesPreview slides={slides} />
+          </div>
+
+          <details className="mt-8 rounded-2xl border border-border bg-surface">
+            <summary className="cursor-pointer px-6 py-4 text-sm font-medium text-foreground">
+              View as text
+            </summary>
+            <article className="border-t border-border px-8 py-6">
+              <ReactMarkdown
+                components={{
+                  h1: (props) => (
+                    <h1 className="mb-4 text-2xl font-semibold text-foreground" {...props} />
+                  ),
+                  h2: (props) => (
+                    <h2
+                      className="mb-2 mt-8 text-lg font-semibold text-accent first:mt-0"
+                      {...props}
+                    />
+                  ),
+                  p: (props) => <p className="mb-4 leading-7 text-foreground/90" {...props} />,
+                  ul: (props) => <ul className="mb-4 list-disc pl-5" {...props} />,
+                  li: (props) => <li className="mb-1 text-foreground/90" {...props} />,
+                }}
+              >
+                {project.documentation}
+              </ReactMarkdown>
+            </article>
+          </details>
+        </>
       ) : (
         !generating && (
           <p className="mt-8 rounded-2xl border border-dashed border-border px-5 py-10 text-center text-sm text-muted">
