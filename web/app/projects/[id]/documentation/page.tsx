@@ -56,17 +56,27 @@ export default function DocumentationPage() {
           <h1 className="text-2xl font-semibold text-black dark:text-zinc-50">
             Documentation
           </h1>
-          <button
-            onClick={generate}
-            disabled={generating}
-            className="rounded bg-black px-4 py-2 text-sm text-white disabled:opacity-50 dark:bg-white dark:text-black"
-          >
-            {generating
-              ? "Generating..."
-              : project.documentation
-                ? "Regenerate"
-                : "Generate documentation"}
-          </button>
+          <div className="flex gap-2">
+            {project.documentation && (
+              <a
+                href={`/api/projects/${id}/documentation/pptx`}
+                className="rounded border border-zinc-300 px-4 py-2 text-sm text-black hover:bg-zinc-100 dark:border-zinc-700 dark:text-zinc-50 dark:hover:bg-zinc-900"
+              >
+                Download as PPTX
+              </a>
+            )}
+            <button
+              onClick={generate}
+              disabled={generating}
+              className="rounded bg-black px-4 py-2 text-sm text-white disabled:opacity-50 dark:bg-white dark:text-black"
+            >
+              {generating
+                ? "Generating..."
+                : project.documentation
+                  ? "Regenerate"
+                  : "Generate documentation"}
+            </button>
+          </div>
         </div>
 
         {project.documentation_generated_at && (
