@@ -67,111 +67,110 @@ export default function ProjectPage() {
     load();
   }
 
-  if (!project) return null;
+  if (!project) {
+    return <main className="mx-auto w-full max-w-3xl flex-1 px-6 py-12 text-muted">Loading…</main>;
+  }
 
   return (
-    <div className="min-h-screen bg-zinc-50 dark:bg-black">
-      <main className="mx-auto max-w-2xl px-6 py-16">
-        <div className="flex items-center justify-between">
-          <Link href="/" className="text-sm text-zinc-500 hover:underline">
-            &larr; All projects
-          </Link>
-          <Link
-            href={`/projects/${id}/documentation`}
-            className="text-sm font-medium text-black hover:underline dark:text-zinc-50"
-          >
-            Documentation &rarr;
-          </Link>
-        </div>
-        <h1 className="mt-2 text-2xl font-semibold text-black dark:text-zinc-50">
-          {project.name}
-        </h1>
-        {project.description && (
-          <p className="mt-1 text-zinc-600 dark:text-zinc-400">{project.description}</p>
-        )}
+    <main className="mx-auto w-full max-w-3xl flex-1 px-6 py-12">
+      <div className="flex items-center justify-between">
+        <Link href="/" className="text-sm text-muted hover:text-accent">
+          &larr; All projects
+        </Link>
+        <Link
+          href={`/projects/${id}/documentation`}
+          className="rounded-full border border-border px-4 py-1.5 text-sm font-medium text-foreground transition hover:border-accent hover:text-accent"
+        >
+          Documentation &rarr;
+        </Link>
+      </div>
 
-        <form onSubmit={upload} className="mt-8 flex flex-col gap-3">
-          <label className="flex cursor-pointer items-center gap-3 rounded border border-dashed border-zinc-300 px-4 py-3 text-sm text-zinc-600 hover:border-zinc-400 hover:bg-zinc-100 dark:border-zinc-700 dark:text-zinc-400 dark:hover:border-zinc-600 dark:hover:bg-zinc-900">
-            <span className="rounded bg-zinc-200 px-3 py-1.5 font-medium text-zinc-800 dark:bg-zinc-800 dark:text-zinc-100">
-              Choose image
-            </span>
-            <span className="truncate">
-              {file ? file.name : "No file selected"}
-            </span>
-            <input
-              type="file"
-              accept="image/*"
-              onChange={(e) => setFile(e.target.files?.[0] ?? null)}
-              className="hidden"
-            />
-          </label>
+      <h1 className="mt-4 text-3xl font-semibold tracking-tight text-foreground">
+        {project.name}
+      </h1>
+      {project.description && <p className="mt-1 text-muted">{project.description}</p>}
+
+      <form
+        onSubmit={upload}
+        className="mt-8 flex flex-col gap-3 rounded-2xl border border-border bg-surface p-5 shadow-sm"
+      >
+        <label className="flex cursor-pointer items-center gap-3 rounded-lg border border-dashed border-border px-4 py-3 text-sm text-muted transition hover:border-accent hover:bg-accent/5">
+          <span className="rounded-full bg-accent px-3.5 py-1.5 text-xs font-medium text-accent-foreground">
+            Choose image
+          </span>
+          <span className="truncate">{file ? file.name : "No file selected"}</span>
           <input
-            className="rounded border border-zinc-300 px-3 py-2 dark:border-zinc-700 dark:bg-zinc-900 dark:text-white"
-            placeholder="Optional note (e.g. 'darker palette, felt too clean before')"
-            value={phrase}
-            onChange={(e) => setPhrase(e.target.value)}
+            type="file"
+            accept="image/*"
+            onChange={(e) => setFile(e.target.files?.[0] ?? null)}
+            className="hidden"
           />
-          <button
-            type="submit"
-            disabled={!file || uploading}
-            className="self-start rounded bg-black px-4 py-2 text-white disabled:opacity-50 dark:bg-white dark:text-black"
-          >
-            {uploading ? "Adding..." : "Add entry"}
-          </button>
-        </form>
+        </label>
+        <input
+          className="rounded-lg border border-border bg-background px-3.5 py-2.5 text-foreground placeholder:text-muted focus:outline-2 focus:outline-accent"
+          placeholder="Optional note (e.g. 'darker palette, felt too clean before')"
+          value={phrase}
+          onChange={(e) => setPhrase(e.target.value)}
+        />
+        <button
+          type="submit"
+          disabled={!file || uploading}
+          className="self-start rounded-full bg-accent px-5 py-2.5 text-sm font-medium text-accent-foreground disabled:opacity-40"
+        >
+          {uploading ? "Adding…" : "Add entry"}
+        </button>
+      </form>
 
-        {related && related.length > 0 && (
-          <div className="mt-6 rounded border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-900">
-            <div className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
-              Related past pieces
-            </div>
-            <ul className="mt-2 flex flex-col gap-2">
-              {related.map((r) => (
-                <li key={r.id} className="text-sm text-zinc-600 dark:text-zinc-400">
-                  <span className="font-medium">
-                    {r.project_id === id ? "This project" : r.project_name}
-                  </span>{" "}
-                  &mdash; {r.description ?? r.phrase ?? r.image_path} (
-                  {(r.similarity * 100).toFixed(0)}% similar)
-                </li>
-              ))}
-            </ul>
-          </div>
-        )}
+      {related && related.length > 0 && (
+        <div className="mt-6 rounded-2xl border border-accent/30 bg-accent/5 p-5">
+          <div className="text-sm font-semibold text-foreground">Related past pieces</div>
+          <ul className="mt-3 flex flex-col gap-2">
+            {related.map((r) => (
+              <li key={r.id} className="text-sm text-muted">
+                <span className="font-medium text-foreground">
+                  {r.project_id === id ? "This project" : r.project_name}
+                </span>{" "}
+                &mdash; {r.description ?? r.phrase ?? r.image_path}{" "}
+                <span className="text-accent">{(r.similarity * 100).toFixed(0)}% similar</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
 
-        <h2 className="mt-10 text-lg font-medium text-black dark:text-zinc-50">
-          Evolution
-        </h2>
-        <ol className="mt-4 flex flex-col gap-6">
-          {items.map((item) => (
-            <li key={item.id} className="flex gap-4">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={item.image_path}
-                alt=""
-                onClick={() => setExpanded(item)}
-                className="h-24 w-24 cursor-pointer rounded object-cover transition-opacity hover:opacity-80"
-              />
-              <div>
-                <div className="text-xs text-zinc-500">
-                  {new Date(item.created_at).toLocaleString()}
-                </div>
-                {item.description && (
-                  <div className="text-sm text-black dark:text-zinc-50">
-                    {item.description}
-                  </div>
-                )}
-                {item.phrase && (
-                  <div className="text-sm italic text-zinc-500">&ldquo;{item.phrase}&rdquo;</div>
-                )}
+      <h2 className="mt-12 text-lg font-semibold text-foreground">Evolution</h2>
+      <ol className="mt-5 flex flex-col gap-0">
+        {items.map((item, i) => (
+          <li key={item.id} className="relative flex gap-4 pb-8 pl-2 last:pb-0">
+            {i < items.length - 1 && (
+              <span className="absolute left-[47px] top-20 bottom-0 w-px bg-border" />
+            )}
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={item.image_path}
+              alt=""
+              onClick={() => setExpanded(item)}
+              className="h-20 w-20 shrink-0 cursor-pointer rounded-xl border border-border object-cover transition hover:opacity-80"
+            />
+            <div className="pt-0.5">
+              <div className="text-xs font-medium text-muted">
+                {new Date(item.created_at).toLocaleDateString()}
               </div>
-            </li>
-          ))}
-          {items.length === 0 && (
-            <li className="text-sm text-zinc-500">No entries yet — add one above.</li>
-          )}
-        </ol>
-      </main>
+              {item.description && (
+                <div className="mt-1 text-sm text-foreground">{item.description}</div>
+              )}
+              {item.phrase && (
+                <div className="mt-1 text-sm italic text-muted">&ldquo;{item.phrase}&rdquo;</div>
+              )}
+            </div>
+          </li>
+        ))}
+        {items.length === 0 && (
+          <li className="rounded-2xl border border-dashed border-border px-5 py-10 text-center text-sm text-muted">
+            No entries yet — add one above.
+          </li>
+        )}
+      </ol>
 
       {expanded && (
         <div
@@ -183,7 +182,7 @@ export default function ProjectPage() {
             <img
               src={expanded.image_path}
               alt=""
-              className="max-h-[80vh] max-w-full rounded object-contain"
+              className="max-h-[80vh] max-w-full rounded-lg object-contain"
               onClick={(e) => e.stopPropagation()}
             />
             <div className="text-center text-sm text-zinc-200">
@@ -195,6 +194,6 @@ export default function ProjectPage() {
           </div>
         </div>
       )}
-    </div>
+    </main>
   );
 }
