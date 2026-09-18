@@ -36,9 +36,8 @@ yarn-error.log*
 # vercel
 .vercel
 
-# app data (sqlite db + uploaded images)
+# app data (sqlite db + uploaded/cropped images) - see lib/storage.ts / DATA_DIR
 /data/
-/public/uploads/
 
 # typescript
 *.tsbuildinfo

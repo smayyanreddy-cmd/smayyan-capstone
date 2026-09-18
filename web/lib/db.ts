@@ -1,11 +1,11 @@
 import { DatabaseSync } from "node:sqlite";
 import fs from "fs";
 import path from "path";
+import { DATA_DIR } from "@/lib/storage";
 
-const dataDir = path.join(process.cwd(), "data");
-fs.mkdirSync(dataDir, { recursive: true });
+fs.mkdirSync(DATA_DIR, { recursive: true });
 
-const db = new DatabaseSync(path.join(dataDir, "app.db"));
+const db = new DatabaseSync(path.join(DATA_DIR, "app.db"));
 
 db.exec(`
   CREATE TABLE IF NOT EXISTS projects (
@@ -28,6 +28,13 @@ db.exec(`
   );
 `);
 
+const itemColumns = (db.prepare("PRAGMA table_info(items)").all() as { name: string }[]).map(
+  (c) => c.name
+);
+if (!itemColumns.includes("cropped_image_path")) {
+  db.exec("ALTER TABLE items ADD COLUMN cropped_image_path TEXT");
+}
+
 export type Project = {
   id: string;
   name: string;
@@ -41,6 +48,7 @@ export type Item = {
   id: string;
   project_id: string;
   image_path: string;
+  cropped_image_path: string | null;
   phrase: string | null;
   description: string | null;
   embedding: string;

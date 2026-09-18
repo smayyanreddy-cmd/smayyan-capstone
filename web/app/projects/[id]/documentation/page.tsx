@@ -4,10 +4,23 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import ReactMarkdown from "react-markdown";
+import SlidesPreview from "@/components/SlidesPreview";
+import { buildSlidePlan } from "@/lib/slides";
+
+type Item = {
+  id: string;
+  project_id: string;
+  image_path: string;
+  cropped_image_path: string | null;
+  phrase: string | null;
+  description: string | null;
+  created_at: string;
+};
 
 type Project = {
   id: string;
   name: string;
+  description: string | null;
   documentation: string | null;
   documentation_generated_at: string | null;
 };
@@ -15,6 +28,7 @@ type Project = {
 export default function DocumentationPage() {
   const { id } = useParams<{ id: string }>();
   const [project, setProject] = useState<Project | null>(null);
+  const [items, setItems] = useState<Item[]>([]);
   const [generating, setGenerating] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -22,6 +36,7 @@ export default function DocumentationPage() {
     const res = await fetch(`/api/projects/${id}`);
     const data = await res.json();
     setProject(data.project);
+    setItems(data.items);
   }
 
   useEffect(() => {
@@ -43,73 +58,99 @@ export default function DocumentationPage() {
     load();
   }
 
-  if (!project) return null;
+  if (!project) {
+    return <main className="mx-auto w-full max-w-3xl flex-1 px-6 py-12 text-muted">Loading…</main>;
+  }
+
+  const slides = project.documentation
+    ? buildSlidePlan(project, items, project.documentation)
+    : null;
 
   return (
-    <div className="min-h-screen bg-zinc-50 dark:bg-black">
-      <main className="mx-auto max-w-2xl px-6 py-16">
-        <Link href={`/projects/${id}`} className="text-sm text-zinc-500 hover:underline">
-          &larr; Back to {project.name}
-        </Link>
+    <main className="mx-auto w-full max-w-4xl flex-1 px-6 py-12">
+      <Link href={`/projects/${id}`} className="text-sm text-muted hover:text-accent">
+        &larr; Back to {project.name}
+      </Link>
 
-        <div className="mt-6 flex items-center justify-between">
-          <h1 className="text-2xl font-semibold text-black dark:text-zinc-50">
-            Documentation
-          </h1>
+      <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
+        <h1 className="text-3xl font-semibold tracking-tight text-foreground">
+          Documentation
+        </h1>
+        <div className="flex gap-2">
+          {project.documentation && (
+            <a
+              href={`/api/projects/${id}/documentation/pptx`}
+              className="rounded-full border border-border px-4 py-2 text-sm font-medium text-foreground transition hover:border-accent hover:text-accent"
+            >
+              Download as PPTX
+            </a>
+          )}
           <button
             onClick={generate}
             disabled={generating}
-            className="rounded bg-black px-4 py-2 text-sm text-white disabled:opacity-50 dark:bg-white dark:text-black"
+            className="rounded-full bg-accent px-5 py-2 text-sm font-medium text-accent-foreground disabled:opacity-40"
           >
             {generating
-              ? "Generating..."
+              ? "Generating…"
               : project.documentation
                 ? "Regenerate"
                 : "Generate documentation"}
           </button>
         </div>
+      </div>
 
-        {project.documentation_generated_at && (
-          <p className="mt-1 text-xs text-zinc-500">
-            Last generated {new Date(project.documentation_generated_at).toLocaleString()}
+      {project.documentation_generated_at && (
+        <p className="mt-1 text-xs text-muted">
+          Last generated {new Date(project.documentation_generated_at).toLocaleString()}
+        </p>
+      )}
+
+      {error && (
+        <p className="mt-4 rounded-xl border border-red-300/50 bg-red-500/10 px-4 py-3 text-sm text-red-600 dark:text-red-400">
+          {error}
+        </p>
+      )}
+
+      {slides ? (
+        <>
+          <div className="mt-8">
+            <SlidesPreview slides={slides} />
+          </div>
+
+          <details className="mt-8 rounded-2xl border border-border bg-surface">
+            <summary className="cursor-pointer px-6 py-4 text-sm font-medium text-foreground">
+              View as text
+            </summary>
+            <article className="border-t border-border px-8 py-6">
+              <ReactMarkdown
+                components={{
+                  h1: (props) => (
+                    <h1 className="mb-4 text-2xl font-semibold text-foreground" {...props} />
+                  ),
+                  h2: (props) => (
+                    <h2
+                      className="mb-2 mt-8 text-lg font-semibold text-accent first:mt-0"
+                      {...props}
+                    />
+                  ),
+                  p: (props) => <p className="mb-4 leading-7 text-foreground/90" {...props} />,
+                  ul: (props) => <ul className="mb-4 list-disc pl-5" {...props} />,
+                  li: (props) => <li className="mb-1 text-foreground/90" {...props} />,
+                }}
+              >
+                {project.documentation}
+              </ReactMarkdown>
+            </article>
+          </details>
+        </>
+      ) : (
+        !generating && (
+          <p className="mt-8 rounded-2xl border border-dashed border-border px-5 py-10 text-center text-sm text-muted">
+            No documentation yet — click &ldquo;Generate documentation&rdquo; once you&apos;ve
+            added the entries you want it to cover.
           </p>
-        )}
-
-        {error && (
-          <p className="mt-4 rounded border border-red-200 bg-red-50 px-4 py-2 text-sm text-red-700 dark:border-red-900 dark:bg-red-950 dark:text-red-300">
-            {error}
-          </p>
-        )}
-
-        {project.documentation ? (
-          <article className="prose-content mt-8">
-            <ReactMarkdown
-              components={{
-                h1: (props) => (
-                  <h1 className="mb-4 text-2xl font-semibold text-black dark:text-zinc-50" {...props} />
-                ),
-                h2: (props) => (
-                  <h2 className="mb-2 mt-8 text-lg font-medium text-black dark:text-zinc-50" {...props} />
-                ),
-                p: (props) => (
-                  <p className="mb-4 leading-7 text-zinc-700 dark:text-zinc-300" {...props} />
-                ),
-                ul: (props) => <ul className="mb-4 list-disc pl-5" {...props} />,
-                li: (props) => <li className="mb-1 text-zinc-700 dark:text-zinc-300" {...props} />,
-              }}
-            >
-              {project.documentation}
-            </ReactMarkdown>
-          </article>
-        ) : (
-          !generating && (
-            <p className="mt-8 text-sm text-zinc-500">
-              No documentation yet — click &ldquo;Generate documentation&rdquo; once you&apos;ve
-              added the entries you want it to cover.
-            </p>
-          )
-        )}
-      </main>
-    </div>
+        )
+      )}
+    </main>
   );
 }

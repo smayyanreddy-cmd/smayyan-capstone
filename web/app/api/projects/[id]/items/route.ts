@@ -5,8 +5,8 @@ import { NextResponse } from "next/server";
 import db, { Item, Project } from "@/lib/db";
 import { cosineSimilarity, embedImage } from "@/lib/embeddings";
 import { describeItem } from "@/lib/describe";
+import { UPLOADS_DIR, uploadUrl } from "@/lib/storage";
 
-const UPLOAD_DIR = path.join(process.cwd(), "public", "uploads");
 const RELATED_COUNT = 3;
 
 export async function POST(
@@ -30,15 +30,15 @@ export async function POST(
     return NextResponse.json({ error: "image is required" }, { status: 400 });
   }
 
-  fs.mkdirSync(UPLOAD_DIR, { recursive: true });
+  fs.mkdirSync(UPLOADS_DIR, { recursive: true });
   const itemId = randomUUID();
   const ext = path.extname(file.name) || ".jpg";
   const filename = `${itemId}${ext}`;
-  const absolutePath = path.join(UPLOAD_DIR, filename);
+  const absolutePath = path.join(UPLOADS_DIR, filename);
   const buffer = Buffer.from(await file.arrayBuffer());
   fs.writeFileSync(absolutePath, buffer);
 
-  const imagePath = `/uploads/${filename}`;
+  const imagePath = uploadUrl(filename);
   const embedding = await embedImage(absolutePath);
   const description = await describeItem(absolutePath, phrase);
   const createdAt = new Date().toISOString();
@@ -52,6 +52,7 @@ export async function POST(
     id: itemId,
     project_id: projectId,
     image_path: imagePath,
+    cropped_image_path: null,
     phrase,
     description,
     embedding: JSON.stringify(embedding),

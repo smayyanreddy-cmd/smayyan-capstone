@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import db, { Item, Project } from "@/lib/db";
 import { generateDocumentation } from "@/lib/documentation";
+import { ensureCroppedImages } from "@/lib/subject-crop";
 
 export async function POST(
   _req: Request,
@@ -21,7 +22,10 @@ export async function POST(
 
   let documentation: string;
   try {
-    documentation = await generateDocumentation(project, items);
+    [documentation] = await Promise.all([
+      generateDocumentation(project, items),
+      ensureCroppedImages(items),
+    ]);
   } catch (err) {
     const message = err instanceof Error ? err.message : "failed to generate documentation";
     return NextResponse.json({ error: message }, { status: 400 });
