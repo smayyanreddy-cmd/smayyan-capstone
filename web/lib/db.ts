@@ -1,11 +1,11 @@
 import { DatabaseSync } from "node:sqlite";
 import fs from "fs";
 import path from "path";
+import { DATA_DIR } from "@/lib/storage";
 
-const dataDir = path.join(process.cwd(), "data");
-fs.mkdirSync(dataDir, { recursive: true });
+fs.mkdirSync(DATA_DIR, { recursive: true });
 
-const db = new DatabaseSync(path.join(dataDir, "app.db"));
+const db = new DatabaseSync(path.join(DATA_DIR, "app.db"));
 
 db.exec(`
   CREATE TABLE IF NOT EXISTS projects (

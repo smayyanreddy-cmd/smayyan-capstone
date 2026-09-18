@@ -3,11 +3,10 @@ import sharp from "sharp";
 import fs from "fs";
 import path from "path";
 import db, { Item } from "@/lib/db";
+import { CROPPED_DIR, absolutePathForUrl, croppedUrl } from "@/lib/storage";
 
 const FOCAL_POINT_MODEL = "gemini-3.6-flash";
 export const CROP_ASPECT = 4 / 3;
-
-const CROPPED_DIR = path.join(process.cwd(), "public", "uploads", "cropped");
 
 async function getFocalPoint(absoluteImagePath: string): Promise<{ x: number; y: number }> {
   const fallback = { x: 0.5, y: 0.5 };
@@ -91,10 +90,10 @@ export async function ensureCroppedImage(item: Item): Promise<string> {
   if (item.cropped_image_path) return item.cropped_image_path;
 
   try {
-    const absoluteSource = path.join(process.cwd(), "public", item.image_path);
+    const absoluteSource = absolutePathForUrl(item.image_path);
     const filename = `${item.id}.jpg`;
     const absoluteOutput = path.join(CROPPED_DIR, filename);
-    const webPath = `/uploads/cropped/${filename}`;
+    const webPath = croppedUrl(filename);
 
     const focal = await getFocalPoint(absoluteSource);
     await cropToSubject(absoluteSource, absoluteOutput, focal);

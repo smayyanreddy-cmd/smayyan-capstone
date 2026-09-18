@@ -1,8 +1,8 @@
 import PptxGenJS from "pptxgenjs";
 import fs from "fs";
-import path from "path";
 import type { Item, Project } from "@/lib/db";
 import { buildSlidePlan } from "@/lib/slides";
+import { absolutePathForUrl } from "@/lib/storage";
 
 const BG = "15130F";
 const SURFACE = "1E1B16";
@@ -205,7 +205,7 @@ export async function buildDocumentationPptx(
     // entry slide
     const { item, index, total: itemTotal } = slide;
     const imageWebPath = item.cropped_image_path ?? item.image_path;
-    const absolutePath = path.join(process.cwd(), "public", imageWebPath);
+    const absolutePath = absolutePathForUrl(imageWebPath);
     const imageExists = fs.existsSync(absolutePath);
 
     const frameX = 0.6;
