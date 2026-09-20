@@ -89,13 +89,13 @@ export default function Home() {
         >
           <input
             autoFocus
-            className="rounded-xl border-2 border-border bg-background px-3.5 py-2.5 text-foreground shadow-brutal-sm placeholder:text-muted focus:outline-none"
+            className="rounded-xl border-2 border-border bg-surface-inset px-3.5 py-2.5 text-foreground shadow-brutal-sm placeholder:text-muted focus:outline-none"
             placeholder="Project name (e.g. Emotion Spiral)"
             value={name}
             onChange={(e) => setName(e.target.value)}
           />
           <input
-            className="rounded-xl border-2 border-border bg-background px-3.5 py-2.5 text-foreground shadow-brutal-sm placeholder:text-muted focus:outline-none"
+            className="rounded-xl border-2 border-border bg-surface-inset px-3.5 py-2.5 text-foreground shadow-brutal-sm placeholder:text-muted focus:outline-none"
             placeholder="One-line description (optional)"
             value={description}
             onChange={(e) => setDescription(e.target.value)}

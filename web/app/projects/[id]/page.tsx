@@ -102,7 +102,7 @@ export default function ProjectPage() {
             {project.name}
           </h1>
           {project.description && (
-            <div className="mt-2.5 rounded-xl border-2 border-border bg-background p-3 shadow-brutal-sm">
+            <div className="mt-2.5 rounded-xl border-2 border-border bg-surface-inset p-3 shadow-brutal-sm">
               <p className="text-[13px] leading-relaxed text-foreground">
                 <strong className="mr-1 rounded border border-border bg-accent px-1.5 py-0.5 font-mono text-[11px] font-black uppercase text-accent-foreground">
                   About
@@ -126,7 +126,7 @@ export default function ProjectPage() {
           onSubmit={upload}
           className="flex flex-col gap-3.5 rounded-2xl rounded-tl-none border-[2.5px] border-border bg-surface p-4 shadow-brutal"
         >
-          <label className="press-brutal flex cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-border bg-background p-5 text-center transition hover:bg-accent/10">
+          <label className="press-brutal flex cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-border bg-surface-inset p-5 text-center transition hover:bg-accent/10">
             <div className="flex h-12 w-12 items-center justify-center rounded-xl border-2 border-border bg-accent-green shadow-brutal-sm">
               <span className="material-symbols-outlined text-[26px] text-accent-foreground">
                 add_a_photo
@@ -150,7 +150,7 @@ export default function ProjectPage() {
             </label>
             <textarea
               rows={2}
-              className="resize-none rounded-xl border-2 border-border bg-background p-3 text-[13px] text-foreground shadow-brutal-sm placeholder:text-muted focus:outline-none"
+              className="resize-none rounded-xl border-2 border-border bg-surface-inset p-3 text-[13px] text-foreground shadow-brutal-sm placeholder:text-muted focus:outline-none"
               placeholder="What changed this time? (e.g. 'darker palette, felt too clean before')"
               value={phrase}
               onChange={(e) => setPhrase(e.target.value)}
@@ -186,7 +186,7 @@ export default function ProjectPage() {
                   </div>
                 </div>
                 <div className="flex flex-col gap-2 rounded-xl rounded-tl-none border-[2.5px] border-border bg-surface p-2.5 shadow-brutal-sm">
-                  <div className="relative aspect-square w-full overflow-hidden rounded-lg border-2 border-border bg-background">
+                  <div className="relative aspect-square w-full overflow-hidden rounded-lg border-2 border-border bg-surface-inset">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
                       src={r.cropped_image_path ?? r.image_path}
@@ -238,7 +238,7 @@ export default function ProjectPage() {
               </div>
 
               <div className="flex items-end pl-2">
-                <div className="rounded-t-xl border-[2.5px] border-b-0 border-border bg-background px-3 py-1 font-mono text-[10px] font-black text-foreground">
+                <div className="rounded-t-xl border-[2.5px] border-b-0 border-border bg-surface-inset px-3 py-1 font-mono text-[10px] font-black text-foreground">
                   ENTRY_{String(items.length - i).padStart(2, "0")}.LOG
                 </div>
               </div>
@@ -269,7 +269,7 @@ export default function ProjectPage() {
                 />
 
                 {item.description && (
-                  <div className="flex items-start gap-2 rounded-xl border-2 border-border bg-background p-3 shadow-brutal-sm">
+                  <div className="flex items-start gap-2 rounded-xl border-2 border-border bg-surface-inset p-3 shadow-brutal-sm">
                     <span className="material-symbols-outlined mt-0.5 shrink-0 text-[18px] text-accent-purple-deep">
                       auto_awesome
                     </span>

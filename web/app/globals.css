@@ -5,6 +5,7 @@
   --page-foreground: #1b1b1f;
 
   --surface: #ffffff;
+  --surface-inset: #f5f3f7;
   --foreground: #1b1b1f;
   --muted: #57534e;
   --border: #000000;
@@ -22,6 +23,7 @@
   --color-background: var(--background);
   --color-page-foreground: var(--page-foreground);
   --color-surface: var(--surface);
+  --color-surface-inset: var(--surface-inset);
   --color-foreground: var(--foreground);
   --color-muted: var(--muted);
   --color-border: var(--border);
