@@ -82,13 +82,13 @@ export default function DocumentationPage() {
         </h1>
         <div className="flex gap-2">
           {project.documentation && (
-            <a
-              href={`/api/projects/${id}/documentation/pptx`}
+            <Link
+              href={`/projects/${id}/documentation/new`}
               className="press-brutal flex items-center gap-1.5 rounded-xl border-2 border-border bg-surface px-4 py-2 font-mono text-xs font-bold text-foreground shadow-brutal-sm"
             >
-              <span className="material-symbols-outlined text-[16px]">download</span>
-              Download PPTX
-            </a>
+              <span className="material-symbols-outlined text-[16px]">dashboard_customize</span>
+              Customize & Export
+            </Link>
           )}
           <button
             onClick={generate}

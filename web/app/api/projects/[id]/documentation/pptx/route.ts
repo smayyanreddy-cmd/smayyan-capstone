@@ -4,10 +4,13 @@ import { buildDocumentationPptx } from "@/lib/pptx";
 import { ensureCroppedImages } from "@/lib/subject-crop";
 
 export async function GET(
-  _req: Request,
+  req: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params;
+  const { searchParams } = new URL(req.url);
+  const templateId = searchParams.get("template");
+  const paletteId = searchParams.get("palette");
 
   const project = db.prepare("SELECT * FROM projects WHERE id = ?").get(id) as
     | Project
@@ -27,7 +30,10 @@ export async function GET(
     .all(id) as Item[];
   const items = await ensureCroppedImages(rawItems);
 
-  const buffer = await buildDocumentationPptx(project, items, project.documentation);
+  const buffer = await buildDocumentationPptx(project, items, project.documentation, {
+    templateId,
+    paletteId,
+  });
 
   const filename = `${project.name.replace(/[^a-z0-9]+/gi, "-").toLowerCase()}.pptx`;
 
