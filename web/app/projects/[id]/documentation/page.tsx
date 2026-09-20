@@ -59,7 +59,7 @@ export default function DocumentationPage() {
   }
 
   if (!project) {
-    return <main className="mx-auto w-full max-w-3xl flex-1 px-6 py-12 text-muted">Loading…</main>;
+    return <main className="mx-auto w-full max-w-3xl flex-1 px-6 py-10 text-page-foreground/70">Loading…</main>;
   }
 
   const slides = project.documentation
@@ -67,29 +67,35 @@ export default function DocumentationPage() {
     : null;
 
   return (
-    <main className="mx-auto w-full max-w-4xl flex-1 px-6 py-12">
-      <Link href={`/projects/${id}`} className="text-sm text-muted hover:text-accent">
-        &larr; Back to {project.name}
+    <main className="mx-auto w-full max-w-4xl flex-1 px-6 py-10">
+      <Link
+        href={`/projects/${id}`}
+        className="flex items-center gap-1 font-mono text-xs font-bold text-page-foreground/60 hover:text-page-foreground"
+      >
+        <span className="material-symbols-outlined text-[16px]">arrow_back</span>
+        Back to {project.name}
       </Link>
 
       <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
-        <h1 className="text-3xl font-semibold tracking-tight text-foreground">
+        <h1 className="text-[26px] font-extrabold tracking-tight text-page-foreground">
           Documentation
         </h1>
         <div className="flex gap-2">
           {project.documentation && (
             <a
               href={`/api/projects/${id}/documentation/pptx`}
-              className="rounded-full border border-border px-4 py-2 text-sm font-medium text-foreground transition hover:border-accent hover:text-accent"
+              className="press-brutal flex items-center gap-1.5 rounded-xl border-2 border-border bg-surface px-4 py-2 font-mono text-xs font-bold text-foreground shadow-brutal-sm"
             >
-              Download as PPTX
+              <span className="material-symbols-outlined text-[16px]">download</span>
+              Download PPTX
             </a>
           )}
           <button
             onClick={generate}
             disabled={generating}
-            className="rounded-full bg-accent px-5 py-2 text-sm font-medium text-accent-foreground disabled:opacity-40"
+            className="press-brutal flex items-center gap-1.5 rounded-xl border-2 border-border bg-accent px-4 py-2 font-mono text-xs font-bold text-accent-foreground shadow-brutal-sm disabled:opacity-40"
           >
+            <span className="material-symbols-outlined text-[16px]">auto_awesome</span>
             {generating
               ? "Generating…"
               : project.documentation
@@ -100,13 +106,13 @@ export default function DocumentationPage() {
       </div>
 
       {project.documentation_generated_at && (
-        <p className="mt-1 text-xs text-muted">
+        <p className="mt-2 font-mono text-[11px] font-bold text-page-foreground/50">
           Last generated {new Date(project.documentation_generated_at).toLocaleString()}
         </p>
       )}
 
       {error && (
-        <p className="mt-4 rounded-xl border border-red-300/50 bg-red-500/10 px-4 py-3 text-sm text-red-600 dark:text-red-400">
+        <p className="mt-4 rounded-xl border-2 border-border bg-accent-pink/10 px-4 py-3 text-sm font-medium text-accent-pink shadow-brutal-sm">
           {error}
         </p>
       )}
@@ -117,11 +123,11 @@ export default function DocumentationPage() {
             <SlidesPreview slides={slides} />
           </div>
 
-          <details className="mt-8 rounded-2xl border border-border bg-surface">
-            <summary className="cursor-pointer px-6 py-4 text-sm font-medium text-foreground">
+          <details className="mt-8 rounded-2xl border-[2.5px] border-border bg-surface shadow-brutal">
+            <summary className="cursor-pointer px-6 py-4 font-mono text-xs font-bold uppercase tracking-wide text-foreground">
               View as text
             </summary>
-            <article className="border-t border-border px-8 py-6">
+            <article className="border-t-2 border-border px-8 py-6">
               <ReactMarkdown
                 components={{
                   h1: (props) => (
@@ -129,7 +135,7 @@ export default function DocumentationPage() {
                   ),
                   h2: (props) => (
                     <h2
-                      className="mb-2 mt-8 text-lg font-semibold text-accent first:mt-0"
+                      className="mb-2 mt-8 text-lg font-semibold text-accent-purple-deep first:mt-0"
                       {...props}
                     />
                   ),
@@ -145,7 +151,7 @@ export default function DocumentationPage() {
         </>
       ) : (
         !generating && (
-          <p className="mt-8 rounded-2xl border border-dashed border-border px-5 py-10 text-center text-sm text-muted">
+          <p className="mt-8 rounded-2xl border-2 border-dashed border-border bg-surface px-5 py-10 text-center text-sm text-muted shadow-brutal-sm">
             No documentation yet — click &ldquo;Generate documentation&rdquo; once you&apos;ve
             added the entries you want it to cover.
           </p>

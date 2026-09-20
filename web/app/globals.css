@@ -1,36 +1,45 @@
 @import "tailwindcss";
 
 :root {
-  --background: #faf9f7;
+  --background: #faf9fd;
+  --page-foreground: #1b1b1f;
+
   --surface: #ffffff;
-  --foreground: #1c1a17;
-  --muted: #6b6560;
-  --border: #e7e3dd;
-  --accent: #b8860b;
-  --accent-foreground: #ffffff;
+  --foreground: #1b1b1f;
+  --muted: #57534e;
+  --border: #000000;
+
+  --accent: #ffe600;
+  --accent-foreground: #000000;
+  --accent-green: #53fe88;
+  --accent-blue: #38bdf8;
+  --accent-purple: #a274ff;
+  --accent-purple-deep: #703fca;
+  --accent-pink: #ff6b6b;
 }
 
 @theme inline {
   --color-background: var(--background);
+  --color-page-foreground: var(--page-foreground);
   --color-surface: var(--surface);
   --color-foreground: var(--foreground);
   --color-muted: var(--muted);
   --color-border: var(--border);
   --color-accent: var(--accent);
   --color-accent-foreground: var(--accent-foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-accent-green: var(--accent-green);
+  --color-accent-blue: var(--accent-blue);
+  --color-accent-purple: var(--accent-purple);
+  --color-accent-purple-deep: var(--accent-purple-deep);
+  --color-accent-pink: var(--accent-pink);
+  --font-sans: var(--font-jakarta);
+  --font-mono: var(--font-grotesk);
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #15130f;
-    --surface: #1e1b16;
-    --foreground: #f3f1ec;
-    --muted: #9c948a;
-    --border: #322d25;
-    --accent: #e0ac1f;
-    --accent-foreground: #1c1a17;
+    --background: #121316;
+    --page-foreground: #f3f1ec;
   }
 }
 
@@ -40,6 +49,23 @@
 
 body {
   background: var(--background);
-  color: var(--foreground);
+  color: var(--page-foreground);
   font-family: var(--font-sans), system-ui, sans-serif;
+}
+
+.shadow-brutal-sm {
+  box-shadow: 2.5px 2.5px 0px var(--border);
+}
+.shadow-brutal {
+  box-shadow: 4px 4px 0px var(--border);
+}
+.shadow-brutal-lg {
+  box-shadow: 6px 6px 0px var(--border);
+}
+.press-brutal {
+  transition: transform 0.1s, box-shadow 0.1s;
+}
+.press-brutal:active {
+  transform: translate(2px, 2px);
+  box-shadow: none;
 }

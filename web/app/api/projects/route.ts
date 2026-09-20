@@ -2,11 +2,39 @@ import { randomUUID } from "crypto";
 import { NextRequest, NextResponse } from "next/server";
 import db, { Project } from "@/lib/db";
 
+type ProjectWithStats = Project & {
+  entry_count: number;
+  last_entry_at: string | null;
+  thumbnails: string[];
+};
+
 export async function GET() {
   const projects = db
     .prepare("SELECT * FROM projects ORDER BY created_at DESC")
     .all() as Project[];
-  return NextResponse.json({ projects });
+
+  const statsStmt = db.prepare(
+    "SELECT COUNT(*) as count, MAX(created_at) as latest FROM items WHERE project_id = ?"
+  );
+  const thumbsStmt = db.prepare(
+    "SELECT image_path, cropped_image_path FROM items WHERE project_id = ? ORDER BY created_at DESC LIMIT 3"
+  );
+
+  const withStats: ProjectWithStats[] = projects.map((project) => {
+    const stats = statsStmt.get(project.id) as { count: number; latest: string | null };
+    const thumbs = thumbsStmt.all(project.id) as {
+      image_path: string;
+      cropped_image_path: string | null;
+    }[];
+    return {
+      ...project,
+      entry_count: stats.count,
+      last_entry_at: stats.latest,
+      thumbnails: thumbs.map((t) => t.cropped_image_path ?? t.image_path),
+    };
+  });
+
+  return NextResponse.json({ projects: withStats });
 }
 
 export async function POST(req: NextRequest) {
