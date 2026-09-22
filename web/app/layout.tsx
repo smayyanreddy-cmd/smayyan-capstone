@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Plus_Jakarta_Sans, Space_Grotesk } from "next/font/google";
+import { Plus_Jakarta_Sans, Press_Start_2P } from "next/font/google";
 import Header from "@/components/Header";
 import "./globals.css";
 
@@ -9,20 +9,20 @@ const jakarta = Plus_Jakarta_Sans({
   weight: ["500", "600", "700", "800"],
 });
 
-const grotesk = Space_Grotesk({
-  variable: "--font-grotesk",
+const pixel = Press_Start_2P({
+  variable: "--font-pixel",
   subsets: ["latin"],
-  weight: ["500", "600", "700"],
+  weight: "400",
 });
 
 export const metadata: Metadata = {
-  title: "Creative Continuity Agent",
+  title: "DocuMate",
   description: "Track how an ongoing creative project evolves over time.",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="en" className={`${jakarta.variable} ${grotesk.variable} h-full antialiased`}>
+    <html lang="en" className={`${jakarta.variable} ${pixel.variable} h-full antialiased`}>
       <head>
         {/* eslint-disable-next-line @next/next/no-page-custom-font, @next/next/google-font-display -- app router root layout is the correct place for this */}
         <link

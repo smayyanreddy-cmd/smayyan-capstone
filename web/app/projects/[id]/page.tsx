@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { relativeTime } from "@/lib/format";
+import type { Voice } from "@/lib/db";
 
 type Item = {
   id: string;
@@ -13,6 +14,7 @@ type Item = {
   phrase: string | null;
   description: string | null;
   created_at: string;
+  sort_order: number;
 };
 
 type RelatedItem = Item & { project_name: string; similarity: number };
@@ -21,6 +23,7 @@ type Project = {
   id: string;
   name: string;
   description: string | null;
+  voice: Voice;
 };
 
 export default function ProjectPage() {
@@ -32,6 +35,11 @@ export default function ProjectPage() {
   const [uploading, setUploading] = useState(false);
   const [related, setRelated] = useState<RelatedItem[] | null>(null);
   const [expanded, setExpanded] = useState<Item | null>(null);
+  const [voicePickerOpen, setVoicePickerOpen] = useState(false);
+  const [savingVoice, setSavingVoice] = useState(false);
+  const [reorderingId, setReorderingId] = useState<string | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<Item | null>(null);
+  const [deletingItemId, setDeletingItemId] = useState<string | null>(null);
 
   async function load() {
     const res = await fetch(`/api/projects/${id}`);
@@ -40,11 +48,50 @@ export default function ProjectPage() {
     setItems(data.items);
   }
 
+  async function updateVoice(voice: Voice) {
+    setSavingVoice(true);
+    const res = await fetch(`/api/projects/${id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ voice }),
+    });
+    const data = await res.json();
+    setSavingVoice(false);
+    if (res.ok) {
+      setProject(data.project);
+      setVoicePickerOpen(false);
+    }
+  }
+
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect -- data fetch on mount / id change
     load();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
+
+  async function moveItem(itemId: string, direction: "earlier" | "later") {
+    setReorderingId(itemId);
+    const res = await fetch(`/api/projects/${id}/items/${itemId}/reorder`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ direction }),
+    });
+    const data = await res.json();
+    setReorderingId(null);
+    if (res.ok) setItems(data.items);
+  }
+
+  function confirmDeleteItem() {
+    const item = deleteTarget;
+    if (!item) return;
+    setDeleteTarget(null);
+    setDeletingItemId(item.id);
+    setTimeout(async () => {
+      await fetch(`/api/projects/${id}/items/${item.id}`, { method: "DELETE" });
+      setItems((prev) => prev.filter((i) => i.id !== item.id));
+      setDeletingItemId(null);
+    }, 600);
+  }
 
   async function upload(e: React.FormEvent) {
     e.preventDefault();
@@ -95,9 +142,46 @@ export default function ProjectPage() {
       {/* Subheader card */}
       <section className="relative mt-5">
         <div className="rounded-2xl border-[2.5px] border-border bg-surface p-4 shadow-brutal">
-          <span className="mb-2 inline-flex items-center gap-1.5 rounded-full border-2 border-border bg-accent-green px-3 py-1 font-mono text-[11px] font-bold uppercase tracking-wide text-accent-foreground shadow-brutal-sm">
-            {items.length} {items.length === 1 ? "entry" : "entries"} logged
-          </span>
+          <div className="mb-2 flex flex-wrap items-center gap-2">
+            <span className="inline-flex items-center gap-1.5 rounded-full border-2 border-border bg-accent-green px-3 py-1 font-mono text-[11px] font-bold uppercase tracking-wide text-accent-foreground shadow-brutal-sm">
+              {items.length} {items.length === 1 ? "entry" : "entries"} logged
+            </span>
+
+            <div className="relative">
+              <button
+                onClick={() => setVoicePickerOpen((v) => !v)}
+                className="press-brutal inline-flex items-center gap-1.5 rounded-full border-2 border-border bg-surface-inset px-3 py-1 font-mono text-[11px] font-bold uppercase tracking-wide text-foreground shadow-brutal-sm"
+              >
+                <span className="material-symbols-outlined text-[14px]">
+                  {project.voice === "group" ? "groups" : "person"}
+                </span>
+                Voice: {project.voice === "group" ? "We" : "I"}
+                <span className="material-symbols-outlined text-[14px]">edit</span>
+              </button>
+              {voicePickerOpen && (
+                <div className="absolute left-0 top-full z-20 mt-1.5 flex flex-col gap-1.5 rounded-xl border-2 border-border bg-surface p-2 shadow-brutal-sm">
+                  <button
+                    onClick={() => updateVoice("personal")}
+                    disabled={savingVoice}
+                    className={`press-brutal rounded-lg border-2 border-border px-3 py-1.5 text-left font-mono text-[11px] font-bold shadow-brutal-sm disabled:opacity-40 ${
+                      project.voice === "personal" ? "bg-accent text-accent-foreground" : "bg-surface-inset text-foreground"
+                    }`}
+                  >
+                    Just me — &ldquo;I&rdquo;
+                  </button>
+                  <button
+                    onClick={() => updateVoice("group")}
+                    disabled={savingVoice}
+                    className={`press-brutal rounded-lg border-2 border-border px-3 py-1.5 text-left font-mono text-[11px] font-bold shadow-brutal-sm disabled:opacity-40 ${
+                      project.voice === "group" ? "bg-accent text-accent-foreground" : "bg-surface-inset text-foreground"
+                    }`}
+                  >
+                    A team — &ldquo;We&rdquo;
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
           <h1 className="text-[22px] font-extrabold leading-snug tracking-tight text-foreground">
             {project.name}
           </h1>
@@ -165,6 +249,7 @@ export default function ProjectPage() {
             <span className="material-symbols-outlined text-[20px]">auto_awesome</span>
             {uploading ? "Logging…" : "Log Entry & Find Matches"}
           </button>
+          {uploading && <div className="pixel-progress" />}
         </form>
       </section>
 
@@ -227,8 +312,11 @@ export default function ProjectPage() {
           {items.length > 1 && (
             <div className="absolute bottom-6 left-3 top-3 w-1 rounded-full bg-border" />
           )}
-          {[...items].reverse().map((item, i) => (
-            <article key={item.id} className="relative flex flex-col gap-2">
+          {[...items].reverse().map((item, i, reversed) => (
+            <article
+              key={item.id}
+              className={`relative flex flex-col gap-2 ${deletingItemId === item.id ? "animate-into-bin pointer-events-none" : ""}`}
+            >
               <div
                 className={`absolute -left-[27px] top-2 z-10 flex h-6 w-6 items-center justify-center rounded-full border-2 border-border shadow-brutal-sm ${
                   i === 0 ? "bg-accent" : "bg-surface"
@@ -237,9 +325,40 @@ export default function ProjectPage() {
                 <div className="h-2.5 w-2.5 rounded-full bg-border" />
               </div>
 
-              <div className="flex items-end pl-2">
+              <div className="flex items-end justify-between pl-2 pr-1">
                 <div className="rounded-t-xl border-[2.5px] border-b-0 border-border bg-surface-inset px-3 py-1 font-mono text-[10px] font-black text-foreground">
                   ENTRY_{String(items.length - i).padStart(2, "0")}.LOG
+                </div>
+                <div className="flex gap-1.5">
+                  <button
+                    onClick={() => moveItem(item.id, "later")}
+                    disabled={i === 0 || reorderingId === item.id}
+                    aria-label="Move to a later point in the timeline"
+                    className="press-brutal flex h-7 w-7 items-center justify-center rounded-lg border-2 border-border bg-surface shadow-brutal-sm disabled:opacity-30"
+                  >
+                    <span className="material-symbols-outlined text-[15px] text-foreground">
+                      arrow_upward
+                    </span>
+                  </button>
+                  <button
+                    onClick={() => moveItem(item.id, "earlier")}
+                    disabled={i === reversed.length - 1 || reorderingId === item.id}
+                    aria-label="Move to an earlier point in the timeline"
+                    className="press-brutal flex h-7 w-7 items-center justify-center rounded-lg border-2 border-border bg-surface shadow-brutal-sm disabled:opacity-30"
+                  >
+                    <span className="material-symbols-outlined text-[15px] text-foreground">
+                      arrow_downward
+                    </span>
+                  </button>
+                  <button
+                    onClick={() => setDeleteTarget(item)}
+                    aria-label="Delete this entry"
+                    className="press-brutal group flex h-7 w-7 items-center justify-center rounded-lg border-2 border-border bg-surface shadow-brutal-sm hover:bg-accent-pink"
+                  >
+                    <span className="material-symbols-outlined text-[15px] text-foreground group-hover:text-white">
+                      delete
+                    </span>
+                  </button>
                 </div>
               </div>
 
@@ -315,6 +434,47 @@ export default function ProjectPage() {
               {expanded.phrase && (
                 <p className="italic text-zinc-400">&ldquo;{expanded.phrase}&rdquo;</p>
               )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {deleteTarget && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-6"
+          onClick={() => setDeleteTarget(null)}
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="flex w-full max-w-sm flex-col gap-4 rounded-2xl border-[2.5px] border-border bg-surface p-5 shadow-brutal-lg"
+          >
+            <div className="flex items-center gap-2.5">
+              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border-2 border-border bg-accent-pink/20">
+                <span className="material-symbols-outlined text-[20px] text-accent-pink">
+                  delete_forever
+                </span>
+              </span>
+              <h3 className="text-[16px] font-extrabold leading-snug text-foreground">
+                Delete this entry?
+              </h3>
+            </div>
+            <p className="text-[13px] font-medium text-foreground/75">
+              This permanently removes the photo, note, and AI description for this entry. This
+              can&apos;t be undone.
+            </p>
+            <div className="flex gap-2.5">
+              <button
+                onClick={() => setDeleteTarget(null)}
+                className="press-brutal flex-1 rounded-xl border-2 border-border bg-surface-inset px-4 py-2.5 text-sm font-bold text-foreground shadow-brutal-sm"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmDeleteItem}
+                className="press-brutal flex-1 rounded-xl border-2 border-border bg-accent-pink px-4 py-2.5 text-sm font-extrabold text-white shadow-brutal-sm"
+              >
+                Delete
+              </button>
             </div>
           </div>
         </div>

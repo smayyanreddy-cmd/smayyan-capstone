@@ -1,8 +1,9 @@
 export type TemplateId = "editorial" | "minimal";
 export type PaletteId = "neo-tactile" | "warm-atelier" | "cyber-studio";
+export const CUSTOM_PALETTE_ID = "custom" as const;
 
 export type Palette = {
-  id: PaletteId;
+  id: PaletteId | typeof CUSTOM_PALETTE_ID;
   label: string;
   description: string;
   bg: string;

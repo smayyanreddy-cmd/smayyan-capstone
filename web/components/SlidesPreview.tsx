@@ -1,5 +1,5 @@
 import type { Slide } from "@/lib/slides";
-import { Palette, Template, resolvePalette, resolveTemplate } from "@/lib/pptx-themes";
+import { CUSTOM_PALETTE_ID, Palette, Template, resolvePalette, resolveTemplate } from "@/lib/pptx-themes";
 
 function Tab({ label, palette }: { label: string; palette: Palette }) {
   return (
@@ -16,12 +16,15 @@ export default function SlidesPreview({
   slides,
   templateId,
   paletteId,
+  customPalette,
 }: {
   slides: Slide[];
   templateId?: string | null;
   paletteId?: string | null;
+  customPalette?: Palette | null;
 }) {
-  const palette = resolvePalette(paletteId);
+  const palette =
+    paletteId === CUSTOM_PALETTE_ID && customPalette ? customPalette : resolvePalette(paletteId);
   const template = resolveTemplate(templateId);
 
   return (
@@ -52,25 +55,31 @@ export default function SlidesPreview({
                 style={{ borderColor: palette.border, color: palette.muted }}
               >
                 <span>{new Date().toLocaleDateString()}</span>
-                <span>Creative Continuity Agent</span>
+                <span>DocuMate</span>
               </div>
             </div>
           )}
 
-          {(slide.type === "overview" || slide.type === "closing") && (
+          {slide.type === "narrative" && (
             <div className="relative flex h-full flex-col overflow-hidden px-[6%] py-[7%]">
               <Tab
-                label={slide.type === "overview" ? "SECTION_LOG.OVERVIEW" : "SECTION_LOG.REFLECTION"}
+                label={
+                  slide.variant === "overview"
+                    ? "SECTION_LOG.OVERVIEW"
+                    : slide.variant === "closing"
+                      ? "SECTION_LOG.REFLECTION"
+                      : `SECTION_LOG.${slide.heading.toUpperCase().replace(/[^A-Z0-9]+/g, "_").slice(0, 16)}`
+                }
                 palette={palette}
               />
               <div
                 className="absolute right-[4%] top-[6%] flex h-14 w-14 items-center justify-center rounded-md text-2xl font-bold sm:h-16 sm:w-16 sm:text-3xl"
                 style={{ background: palette.accent, color: palette.accentForeground, border: `2px solid ${palette.border}` }}
               >
-                {slide.type === "overview" ? "“" : "”"}
+                {slide.variant === "overview" ? "“" : slide.variant === "closing" ? "”" : "✦"}
               </div>
-              <div className="mt-6 text-base font-bold sm:mt-7 sm:text-lg" style={{ color: palette.text }}>
-                {slide.type === "overview" ? "Overview" : "Reflection"}
+              <div className="mt-6 line-clamp-2 text-base font-bold sm:mt-7 sm:text-lg" style={{ color: palette.text }}>
+                {slide.heading}
               </div>
               <div
                 className="mt-1 h-1 w-8"
@@ -85,6 +94,14 @@ export default function SlidesPreview({
                   {slide.body}
                 </div>
               </div>
+              {slide.note && (
+                <div
+                  className="absolute bottom-[10%] left-[6%] right-[6%] text-[9px] italic sm:text-[11px]"
+                  style={{ color: palette.muted }}
+                >
+                  {slide.note}
+                </div>
+              )}
             </div>
           )}
 

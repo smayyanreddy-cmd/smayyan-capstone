@@ -1,7 +1,7 @@
 import PptxGenJS from "pptxgenjs";
 import fs from "fs";
 import type { Item, Project } from "@/lib/db";
-import { buildSlidePlan } from "@/lib/slides";
+import { buildSlidePlan, Density } from "@/lib/slides";
 import { absolutePathForUrl } from "@/lib/storage";
 import { Palette, resolvePalette, resolveTemplate } from "@/lib/pptx-themes";
 
@@ -91,19 +91,24 @@ export async function buildDocumentationPptx(
   project: Project,
   items: Item[],
   documentation: string,
-  options?: { templateId?: string | null; paletteId?: string | null }
+  options?: {
+    templateId?: string | null;
+    paletteId?: string | null;
+    palette?: Palette | null;
+    density?: Density | null;
+  }
 ): Promise<Buffer> {
-  const palette = resolvePalette(options?.paletteId);
+  const palette = options?.palette ?? resolvePalette(options?.paletteId);
   const template = resolveTemplate(options?.templateId);
   const c = (hex: string) => hex.replace("#", "");
 
   const pptx = new PptxGenJS();
   pptx.defineLayout({ name: "WIDE", width: W, height: H });
   pptx.layout = "WIDE";
-  pptx.author = "Creative Continuity Agent";
+  pptx.author = "DocuMate";
   pptx.title = project.name;
 
-  const slides = buildSlidePlan(project, items, documentation);
+  const slides = buildSlidePlan(project, items, documentation, options?.density ?? "full");
   const total = slides.length;
 
   slides.forEach((slide, i) => {
@@ -138,6 +143,7 @@ export async function buildDocumentationPptx(
           h: 0.8,
           fontSize: 16,
           color: c(palette.muted),
+          autoFit: true,
         });
       }
       s.addShape("rect", {
@@ -152,7 +158,7 @@ export async function buildDocumentationPptx(
         new Date().toLocaleDateString(undefined, { year: "numeric", month: "long", day: "numeric" }),
         { x: 0.9, y: H - 0.7, w: 6, h: 0.4, fontSize: 11, bold: true, color: c(palette.muted) }
       );
-      s.addText("CREATIVE CONTINUITY AGENT", {
+      s.addText("DOCUMATE", {
         x: W - 5.9,
         y: H - 0.7,
         w: 5,
@@ -166,21 +172,24 @@ export async function buildDocumentationPptx(
       return;
     }
 
-    if (slide.type === "overview" || slide.type === "closing") {
-      addTab(
-        s,
-        pptx,
-        palette,
-        slide.type === "overview" ? "SECTION_LOG.OVERVIEW" : "SECTION_LOG.REFLECTION"
-      );
-      addSectionHeading(s, palette, slide.type === "overview" ? "Overview" : "Reflection");
-      s.addText(slide.type === "overview" ? "“" : "”", {
+    if (slide.type === "narrative") {
+      const tabLabel =
+        slide.variant === "overview"
+          ? "SECTION_LOG.OVERVIEW"
+          : slide.variant === "closing"
+            ? "SECTION_LOG.REFLECTION"
+            : `SECTION_LOG.${slide.heading.toUpperCase().replace(/[^A-Z0-9]+/g, "_").slice(0, 20)}`;
+      const mark = slide.variant === "overview" ? "“" : slide.variant === "closing" ? "”" : "✦";
+
+      addTab(s, pptx, palette, tabLabel);
+      addSectionHeading(s, palette, slide.heading);
+      s.addText(mark, {
         shape: pptx.ShapeType.rect,
         x: 10.6,
         y: 0.5,
         w: 1.9,
         h: 1.9,
-        fontSize: 90,
+        fontSize: slide.variant === "section" ? 60 : 90,
         bold: true,
         color: c(palette.accentForeground),
         fill: { color: c(palette.accent) },
@@ -200,12 +209,24 @@ export async function buildDocumentationPptx(
         x: 1.05,
         y: 2.3,
         w: 10.95,
-        h: 4.2,
+        h: slide.note ? 3.85 : 4.2,
         fontSize: 18,
         color: c(palette.text),
         valign: "top",
         lineSpacingMultiple: 1.3,
+        autoFit: true,
       });
+      if (slide.note) {
+        s.addText(slide.note, {
+          x: 1.05,
+          y: 6.15,
+          w: 10.95,
+          h: 0.4,
+          fontSize: 11,
+          italic: true,
+          color: c(palette.muted),
+        });
+      }
       addFooter(s, palette, project.name, pageNum, total);
       return;
     }
@@ -278,6 +299,7 @@ export async function buildDocumentationPptx(
           color: c(palette.text),
           valign: "top",
           lineSpacingMultiple: 1.2,
+          autoFit: true,
         });
       }
       if (item.phrase) {
@@ -289,6 +311,7 @@ export async function buildDocumentationPptx(
           fontSize: 12,
           italic: true,
           color: c(palette.muted),
+          autoFit: true,
         });
       }
 
@@ -378,6 +401,7 @@ export async function buildDocumentationPptx(
         color: c(palette.text),
         valign: "top",
         lineSpacingMultiple: 1.25,
+        autoFit: true,
       });
     }
 
@@ -399,6 +423,7 @@ export async function buildDocumentationPptx(
         italic: true,
         color: c(palette.muted),
         valign: "top",
+        autoFit: true,
       });
     }
 

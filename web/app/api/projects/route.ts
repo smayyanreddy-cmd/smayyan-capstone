@@ -1,6 +1,6 @@
 import { randomUUID } from "crypto";
 import { NextRequest, NextResponse } from "next/server";
-import db, { Project } from "@/lib/db";
+import db, { Project, Voice } from "@/lib/db";
 
 type ProjectWithStats = Project & {
   entry_count: number;
@@ -41,6 +41,7 @@ export async function POST(req: NextRequest) {
   const body = await req.json();
   const name = (body.name as string | undefined)?.trim();
   const description = (body.description as string | undefined)?.trim() || null;
+  const voice: Voice = body.voice === "group" ? "group" : "personal";
 
   if (!name) {
     return NextResponse.json({ error: "name is required" }, { status: 400 });
@@ -53,11 +54,13 @@ export async function POST(req: NextRequest) {
     created_at: new Date().toISOString(),
     documentation: null,
     documentation_generated_at: null,
+    custom_theme: null,
+    voice,
   };
 
   db.prepare(
-    "INSERT INTO projects (id, name, description, created_at) VALUES (?, ?, ?, ?)"
-  ).run(project.id, project.name, project.description, project.created_at);
+    "INSERT INTO projects (id, name, description, created_at, voice) VALUES (?, ?, ?, ?, ?)"
+  ).run(project.id, project.name, project.description, project.created_at, project.voice);
 
   return NextResponse.json({ project }, { status: 201 });
 }

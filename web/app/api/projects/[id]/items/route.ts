@@ -40,13 +40,16 @@ export async function POST(
 
   const imagePath = uploadUrl(filename);
   const embedding = await embedImage(absolutePath);
-  const description = await describeItem(absolutePath, phrase);
+  const description = await describeItem(absolutePath, phrase, project.voice);
   const createdAt = new Date().toISOString();
+  const { next } = db
+    .prepare("SELECT COALESCE(MAX(sort_order), 0) + 1 AS next FROM items WHERE project_id = ?")
+    .get(projectId) as { next: number };
 
   db.prepare(
-    `INSERT INTO items (id, project_id, image_path, phrase, description, embedding, created_at)
-     VALUES (?, ?, ?, ?, ?, ?, ?)`
-  ).run(itemId, projectId, imagePath, phrase, description, JSON.stringify(embedding), createdAt);
+    `INSERT INTO items (id, project_id, image_path, phrase, description, embedding, created_at, sort_order)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
+  ).run(itemId, projectId, imagePath, phrase, description, JSON.stringify(embedding), createdAt, next);
 
   const item: Item = {
     id: itemId,
@@ -57,6 +60,7 @@ export async function POST(
     description,
     embedding: JSON.stringify(embedding),
     created_at: createdAt,
+    sort_order: next,
   };
 
   const related = findRelatedItems(itemId, embedding);

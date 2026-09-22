@@ -34,6 +34,32 @@ const itemColumns = (db.prepare("PRAGMA table_info(items)").all() as { name: str
 if (!itemColumns.includes("cropped_image_path")) {
   db.exec("ALTER TABLE items ADD COLUMN cropped_image_path TEXT");
 }
+if (!itemColumns.includes("sort_order")) {
+  db.exec("ALTER TABLE items ADD COLUMN sort_order INTEGER");
+  // Backfill existing rows with their chronological rank per project, so
+  // manual reordering has a starting point that matches current behavior.
+  db.exec(`
+    UPDATE items
+    SET sort_order = (
+      SELECT COUNT(*) FROM items AS earlier
+      WHERE earlier.project_id = items.project_id
+        AND (earlier.created_at < items.created_at
+             OR (earlier.created_at = items.created_at AND earlier.id <= items.id))
+    )
+  `);
+}
+
+const projectColumns = (
+  db.prepare("PRAGMA table_info(projects)").all() as { name: string }[]
+).map((c) => c.name);
+if (!projectColumns.includes("custom_theme")) {
+  db.exec("ALTER TABLE projects ADD COLUMN custom_theme TEXT");
+}
+if (!projectColumns.includes("voice")) {
+  db.exec("ALTER TABLE projects ADD COLUMN voice TEXT NOT NULL DEFAULT 'personal'");
+}
+
+export type Voice = "personal" | "group";
 
 export type Project = {
   id: string;
@@ -42,6 +68,8 @@ export type Project = {
   created_at: string;
   documentation: string | null;
   documentation_generated_at: string | null;
+  custom_theme: string | null;
+  voice: Voice;
 };
 
 export type Item = {
@@ -53,6 +81,7 @@ export type Item = {
   description: string | null;
   embedding: string;
   created_at: string;
+  sort_order: number;
 };
 
 export default db;

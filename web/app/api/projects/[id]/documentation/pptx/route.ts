@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import db, { Item, Project } from "@/lib/db";
 import { buildDocumentationPptx } from "@/lib/pptx";
+import { CUSTOM_PALETTE_ID, Palette } from "@/lib/pptx-themes";
+import { Density } from "@/lib/slides";
 import { ensureCroppedImages } from "@/lib/subject-crop";
 
 export async function GET(
@@ -11,6 +13,7 @@ export async function GET(
   const { searchParams } = new URL(req.url);
   const templateId = searchParams.get("template");
   const paletteId = searchParams.get("palette");
+  const density = (searchParams.get("density") as Density | null) ?? "full";
 
   const project = db.prepare("SELECT * FROM projects WHERE id = ?").get(id) as
     | Project
@@ -26,13 +29,24 @@ export async function GET(
   }
 
   const rawItems = db
-    .prepare("SELECT * FROM items WHERE project_id = ? ORDER BY created_at ASC")
+    .prepare("SELECT * FROM items WHERE project_id = ? ORDER BY sort_order ASC")
     .all(id) as Item[];
   const items = await ensureCroppedImages(rawItems);
+
+  let customPalette: Palette | null = null;
+  if (paletteId === CUSTOM_PALETTE_ID && project.custom_theme) {
+    try {
+      customPalette = JSON.parse(project.custom_theme);
+    } catch {
+      customPalette = null;
+    }
+  }
 
   const buffer = await buildDocumentationPptx(project, items, project.documentation, {
     templateId,
     paletteId,
+    palette: customPalette,
+    density: density === "highlights" ? "highlights" : "full",
   });
 
   const filename = `${project.name.replace(/[^a-z0-9]+/gi, "-").toLowerCase()}.pptx`;
