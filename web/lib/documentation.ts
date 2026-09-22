@@ -26,20 +26,28 @@ export async function generateDocumentation(
     })
     .join("\n\n");
 
-  const prompt = `You are documenting the evolution of a creative project called "${project.name}"${
+  const voiceInstruction =
+    project.voice === "group"
+      ? `Write from the creators' own first-person-plural point of view — "we" — as if the team behind "${project.name}" is narrating its own evolution. Never refer to them in the third person ("the creators", "the team") or use passive/impersonal framing ("the project evolved"); write "we" did things.`
+      : `Write from the creator's own first-person point of view — "I" — as if the person behind "${project.name}" is narrating their own evolution. Never refer to them in the third person ("the creator") or use passive/impersonal framing ("the project evolved"); write "I" did things.`;
+
+  const prompt = `You are ghostwriting documentation of the evolution of a creative project called "${project.name}"${
     project.description ? ` (${project.description})` : ""
-  }.
+  }, in the voice of the person(s) who made it.
+
+${voiceInstruction}
 
 Here are its entries in chronological order, each with a short description of what it looks like and, where available, the creator's own note about it:
 
 ${entries}
 
-Write a short, well-structured piece of documentation (markdown, using a single "#" title and "##" section headings) that:
-- Opens with a brief framing of what this project is about
-- Walks through how the concept visibly evolved over time, calling out specific turning points or shifts you notice across the entries (not just a restatement of each entry)
-- Closes with a short reflection on the overall arc
+Write markdown documentation with this exact structure, since each "##" section becomes its own slide in a deck:
+- A single "#" title line with the project name
+- "## Overview" — a brief paragraph framing what this project is and where it started
+- One or two more "##" sections, each with a short, specific, punchy heading (4-6 words, not just "Turning Point") naming one real shift or turning point you notice across the entries, followed by a paragraph on it. Only add a section if there's a genuinely distinct shift to point to — don't invent one to hit a count.
+- "## Reflection" — a short closing paragraph on the overall arc
 
-Keep it grounded in what's actually described above — don't invent details. Aim for a few short paragraphs, not an exhaustive list.`;
+Keep every section grounded in what's actually described above — don't invent details, and don't just restate each entry in order. Each section should be a short paragraph (2-4 sentences), not a wall of text.`;
 
   const response = await client.models.generateContent({
     model: DOCUMENTATION_MODEL,

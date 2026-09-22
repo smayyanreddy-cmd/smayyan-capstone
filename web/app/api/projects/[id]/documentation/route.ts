@@ -17,7 +17,7 @@ export async function POST(
   }
 
   const items = db
-    .prepare("SELECT * FROM items WHERE project_id = ? ORDER BY created_at ASC")
+    .prepare("SELECT * FROM items WHERE project_id = ? ORDER BY sort_order ASC")
     .all(id) as Item[];
 
   let documentation: string;

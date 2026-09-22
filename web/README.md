@@ -1,4 +1,4 @@
-# Creative Continuity Agent — Web App
+# DocuMate — Web App
 
 A Next.js app that lets you track how a single creative project evolves over
 time: upload photos of your work as you go, get an AI-written description

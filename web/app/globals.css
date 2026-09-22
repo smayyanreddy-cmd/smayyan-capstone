@@ -1,36 +1,47 @@
 @import "tailwindcss";
 
 :root {
-  --background: #faf9f7;
-  --surface: #ffffff;
-  --foreground: #1c1a17;
-  --muted: #6b6560;
-  --border: #e7e3dd;
-  --accent: #b8860b;
-  --accent-foreground: #ffffff;
+  --background: #cbd8f6;
+  --page-foreground: #2c1c12;
+
+  --surface: #f7e8cf;
+  --surface-inset: #fff6e6;
+  --foreground: #2c1c12;
+  --muted: #7a5c3e;
+  --border: #2c1c12;
+
+  --accent: #e8823c;
+  --accent-foreground: #2c1204;
+  --accent-green: #7bc47f;
+  --accent-blue: #4fa39c;
+  --accent-purple: #8b7ec9;
+  --accent-purple-deep: #5c4a8a;
+  --accent-pink: #e8607a;
 }
 
 @theme inline {
   --color-background: var(--background);
+  --color-page-foreground: var(--page-foreground);
   --color-surface: var(--surface);
+  --color-surface-inset: var(--surface-inset);
   --color-foreground: var(--foreground);
   --color-muted: var(--muted);
   --color-border: var(--border);
   --color-accent: var(--accent);
   --color-accent-foreground: var(--accent-foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-accent-green: var(--accent-green);
+  --color-accent-blue: var(--accent-blue);
+  --color-accent-purple: var(--accent-purple);
+  --color-accent-purple-deep: var(--accent-purple-deep);
+  --color-accent-pink: var(--accent-pink);
+  --font-sans: var(--font-jakarta);
+  --font-mono: var(--font-pixel);
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #15130f;
-    --surface: #1e1b16;
-    --foreground: #f3f1ec;
-    --muted: #9c948a;
-    --border: #322d25;
-    --accent: #e0ac1f;
-    --accent-foreground: #1c1a17;
+    --background: #1c140f;
+    --page-foreground: #f3e6cf;
   }
 }
 
@@ -40,6 +51,124 @@
 
 body {
   background: var(--background);
-  color: var(--foreground);
+  color: var(--page-foreground);
   font-family: var(--font-sans), system-ui, sans-serif;
+}
+
+/* Chunkier, filled icon glyphs read closer to pixel-art iconography than the
+   thin default outline weight. */
+.material-symbols-outlined {
+  font-variation-settings:
+    "FILL" 1,
+    "wght" 600,
+    "GRAD" 100,
+    "opsz" 24;
+}
+
+.font-mono {
+  line-height: 1.6;
+}
+
+/* Retro desktop-window title bar: a colored strip with a filename-style
+   label and three non-interactive "window control" squares. */
+.pixel-titlebar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  border-bottom: 2.5px solid var(--border);
+  padding: 0.4rem 0.65rem;
+}
+.pixel-titlebar-controls {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+}
+.pixel-titlebar-controls span {
+  display: block;
+  width: 9px;
+  height: 9px;
+  border: 1.5px solid var(--border);
+  background: var(--surface);
+}
+
+/* Segmented, animated "loading" bar in the style of the pixel-UI asset
+   pack's marquee progress indicator. */
+.pixel-progress {
+  position: relative;
+  height: 14px;
+  overflow: hidden;
+  border: 2px solid var(--border);
+  background: var(--surface-inset);
+}
+.pixel-progress::after {
+  content: "";
+  position: absolute;
+  inset: 2px;
+  background-image: repeating-linear-gradient(
+    90deg,
+    var(--accent-blue) 0 10px,
+    transparent 10px 14px
+  );
+  background-size: 28px 100%;
+  animation: pixel-marquee 0.7s linear infinite;
+}
+@keyframes pixel-marquee {
+  from {
+    background-position: 0 0;
+  }
+  to {
+    background-position: -28px 0;
+  }
+}
+
+.shadow-brutal-sm {
+  box-shadow: 2.5px 2.5px 0px var(--border);
+}
+.shadow-brutal {
+  box-shadow: 4px 4px 0px var(--border);
+}
+.shadow-brutal-lg {
+  box-shadow: 6px 6px 0px var(--border);
+}
+.press-brutal {
+  transition: transform 0.1s, box-shadow 0.1s;
+}
+.press-brutal:active {
+  transform: translate(2px, 2px);
+  box-shadow: none;
+}
+
+@keyframes into-bin {
+  0% {
+    transform: translateY(0) scale(1) rotate(0deg);
+    opacity: 1;
+  }
+  35% {
+    transform: translateY(10px) scale(0.96) rotate(-2deg);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(160px) scale(0.05) rotate(24deg);
+    opacity: 0;
+  }
+}
+.animate-into-bin {
+  animation: into-bin 600ms cubic-bezier(0.55, 0, 0.85, 0.35) forwards;
+  transform-origin: 92% 8%;
+}
+
+@keyframes bin-lid-open {
+  0%,
+  100% {
+    transform: rotate(0deg);
+  }
+  50% {
+    transform: rotate(-24deg);
+  }
+}
+.animate-bin-lid {
+  animation: bin-lid-open 600ms ease-in-out;
+  transform-origin: 85% 85%;
 }
