@@ -39,6 +39,7 @@ export default function DocumentationPage() {
 
   const [customPalette, setCustomPalette] = useState<Palette | null>(null);
   const [heroFile, setHeroFile] = useState<File | null>(null);
+  const [productDescription, setProductDescription] = useState("");
   const [primaryColor, setPrimaryColor] = useState("#ffe600");
   const [secondaryColor, setSecondaryColor] = useState("#703fca");
   const [generatingTheme, setGeneratingTheme] = useState(false);
@@ -52,6 +53,7 @@ export default function DocumentationPage() {
     if (data.project?.custom_theme) {
       try {
         setCustomPalette(JSON.parse(data.project.custom_theme));
+        setPaletteId(CUSTOM_PALETTE_ID);
       } catch {
         setCustomPalette(null);
       }
@@ -74,6 +76,7 @@ export default function DocumentationPage() {
     const form = new FormData();
     form.append("image", heroFile);
     form.append("colors", JSON.stringify([primaryColor, secondaryColor]));
+    if (productDescription.trim()) form.append("description", productDescription.trim());
     const res = await fetch(`/api/projects/${id}/documentation/theme`, {
       method: "POST",
       body: form,
@@ -297,8 +300,9 @@ export default function DocumentationPage() {
           </h3>
         </div>
         <p className="mb-3 text-[11px] text-muted">
-          Upload a photo of the product and pick your brand colors — Gemini reads the photo&apos;s
-          mood and builds a matching palette.
+          Upload a photo of the product, describe it, and pick your brand colors — Gemini reads
+          the photo&apos;s mood, builds a matching palette, and paraphrases your description into
+          a tagline for the title slide.
         </p>
 
         {themeError && (
@@ -306,6 +310,19 @@ export default function DocumentationPage() {
             {themeError}
           </p>
         )}
+
+        <label className="mb-3 flex flex-col gap-1">
+          <span className="font-mono text-[10px] font-bold uppercase tracking-wide text-muted">
+            Product description (optional)
+          </span>
+          <textarea
+            rows={2}
+            value={productDescription}
+            onChange={(e) => setProductDescription(e.target.value)}
+            placeholder="What is it, what does it do, who's it for?"
+            className="resize-none rounded-xl border-2 border-border bg-surface-inset p-3 text-[13px] text-foreground shadow-brutal-sm placeholder:text-muted focus:outline-none"
+          />
+        </label>
 
         <div className="flex flex-wrap items-end gap-4">
           <label className="flex flex-col gap-1">
@@ -356,9 +373,16 @@ export default function DocumentationPage() {
         </div>
 
         {customPalette && (
-          <p className="mt-3 text-[11px] font-bold text-muted">
-            Mood detected: <span className="text-foreground">{customPalette.description}</span>
-          </p>
+          <div className="mt-3 flex flex-col gap-1">
+            <p className="text-[11px] font-bold text-muted">
+              Mood detected: <span className="text-foreground">{customPalette.description}</span>
+            </p>
+            {customPalette.tagline && (
+              <p className="text-[11px] font-bold text-muted">
+                Tagline: <span className="italic text-foreground">{customPalette.tagline}</span>
+              </p>
+            )}
+          </div>
         )}
       </section>
 

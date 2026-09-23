@@ -14,6 +14,10 @@ export type Palette = {
   accent: string;
   accentForeground: string;
   accentSecondary: string;
+  /** AI-paraphrased version of the product description the user wrote
+   * before generating a mood palette — only set for custom mood palettes,
+   * used as the title slide's subtitle in place of the project description. */
+  tagline?: string;
 };
 
 export type Template = {

@@ -32,6 +32,7 @@ export async function POST(
   } catch {
     colors = [];
   }
+  const description = (form.get("description") as string | null)?.trim() || null;
 
   fs.mkdirSync(UPLOADS_DIR, { recursive: true });
   const tmpFilename = `theme-${randomUUID()}${path.extname(file.name) || ".jpg"}`;
@@ -40,7 +41,7 @@ export async function POST(
   fs.writeFileSync(absolutePath, buffer);
 
   try {
-    const theme = await generateMoodPalette(absolutePath, colors, "Custom Mood");
+    const theme = await generateMoodPalette(absolutePath, colors, "Custom Mood", description);
 
     db.prepare("UPDATE projects SET custom_theme = ? WHERE id = ?").run(
       JSON.stringify(theme),

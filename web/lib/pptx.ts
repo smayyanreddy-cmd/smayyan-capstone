@@ -135,8 +135,9 @@ export async function buildDocumentationPptx(
         fill: { color: c(palette.accent) },
         line: { color: c(palette.border), width: 1.5 },
       });
-      if (slide.description) {
-        s.addText(slide.description, {
+      const titleSubtitle = palette.tagline || slide.description;
+      if (titleSubtitle) {
+        s.addText(titleSubtitle, {
           x: 0.9,
           y: 4.25,
           w: 9,
@@ -294,23 +295,11 @@ export async function buildDocumentationPptx(
           x: 0.6,
           y: capY + 0.5,
           w: W - 1.2,
-          h: 0.7,
+          h: 1.0,
           fontSize: 15,
           color: c(palette.text),
           valign: "top",
           lineSpacingMultiple: 1.2,
-          autoFit: true,
-        });
-      }
-      if (item.phrase) {
-        s.addText(`“${item.phrase}”`, {
-          x: 0.6,
-          y: capY + 1.1,
-          w: W - 1.2,
-          h: 0.4,
-          fontSize: 12,
-          italic: true,
-          color: c(palette.muted),
           autoFit: true,
         });
       }
@@ -396,33 +385,11 @@ export async function buildDocumentationPptx(
         x: textX,
         y: frameY + 1.42,
         w: textW,
-        h: 2.4,
+        h: frameH - 1.42,
         fontSize: 17,
         color: c(palette.text),
         valign: "top",
         lineSpacingMultiple: 1.25,
-        autoFit: true,
-      });
-    }
-
-    if (item.phrase) {
-      s.addShape("rect", {
-        x: textX,
-        y: frameY + frameH - 0.95,
-        w: 0.06,
-        h: 0.85,
-        fill: { color: c(palette.accent) },
-        line: { color: c(palette.border), width: 1 },
-      });
-      s.addText(`“${item.phrase}”`, {
-        x: textX + 0.28,
-        y: frameY + frameH - 1,
-        w: textW - 0.28,
-        h: 0.95,
-        fontSize: 13,
-        italic: true,
-        color: c(palette.muted),
-        valign: "top",
         autoFit: true,
       });
     }

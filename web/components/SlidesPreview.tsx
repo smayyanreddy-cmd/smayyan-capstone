@@ -45,9 +45,9 @@ export default function SlidesPreview({
                 className="mt-3 h-1 w-12"
                 style={{ background: palette.accent, border: `1.5px solid ${palette.border}` }}
               />
-              {slide.description && (
+              {(palette.tagline || slide.description) && (
                 <div className="mt-3 max-w-xl text-xs sm:text-sm" style={{ color: palette.muted }}>
-                  {slide.description}
+                  {palette.tagline || slide.description}
                 </div>
               )}
               <div
@@ -189,16 +189,8 @@ function EntrySlide({
           {new Date(slide.item.created_at).toLocaleDateString()}
         </div>
         {slide.item.description && (
-          <div className="mt-2 line-clamp-4 text-[11px] leading-snug sm:text-sm" style={{ color: palette.text }}>
+          <div className="mt-2 line-clamp-6 text-[11px] leading-snug sm:text-sm" style={{ color: palette.text }}>
             {slide.item.description}
-          </div>
-        )}
-        {slide.item.phrase && (
-          <div
-            className="mt-2 border-l-2 pl-2 text-[10px] italic sm:text-xs"
-            style={{ borderColor: palette.accent, color: palette.muted }}
-          >
-            &ldquo;{slide.item.phrase}&rdquo;
           </div>
         )}
       </div>
