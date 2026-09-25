@@ -2,9 +2,10 @@ import { randomUUID } from "crypto";
 import fs from "fs";
 import path from "path";
 import { NextResponse } from "next/server";
-import db, { Project } from "@/lib/db";
+import db from "@/lib/db";
 import { generateMoodPalette } from "@/lib/mood-theme";
 import { UPLOADS_DIR } from "@/lib/storage";
+import { requireOwnedProject } from "@/lib/authz";
 
 export async function POST(
   req: Request,
@@ -12,12 +13,8 @@ export async function POST(
 ) {
   const { id } = await params;
 
-  const project = db.prepare("SELECT * FROM projects WHERE id = ?").get(id) as
-    | Project
-    | undefined;
-  if (!project) {
-    return NextResponse.json({ error: "project not found" }, { status: 404 });
-  }
+  const result = await requireOwnedProject(id);
+  if ("error" in result) return result.error;
 
   const form = await req.formData();
   const file = form.get("image");
@@ -43,10 +40,9 @@ export async function POST(
   try {
     const theme = await generateMoodPalette(absolutePath, colors, "Custom Mood", description);
 
-    db.prepare("UPDATE projects SET custom_theme = ? WHERE id = ?").run(
-      JSON.stringify(theme),
-      id
-    );
+    db.prepare(
+      "UPDATE projects SET custom_theme = ?, product_description = COALESCE(?, product_description) WHERE id = ?"
+    ).run(JSON.stringify(theme), description, id);
 
     return NextResponse.json({ theme });
   } finally {

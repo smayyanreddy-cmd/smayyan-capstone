@@ -1,5 +1,6 @@
 import { randomUUID } from "crypto";
 import { NextRequest, NextResponse } from "next/server";
+import { auth } from "@/lib/auth";
 import db, { Project, Voice } from "@/lib/db";
 
 type ProjectWithStats = Project & {
@@ -9,9 +10,14 @@ type ProjectWithStats = Project & {
 };
 
 export async function GET() {
+  const session = await auth();
+  if (!session?.user?.email) {
+    return NextResponse.json({ error: "not signed in" }, { status: 401 });
+  }
+
   const projects = db
-    .prepare("SELECT * FROM projects ORDER BY created_at DESC")
-    .all() as Project[];
+    .prepare("SELECT * FROM projects WHERE owner_email = ? ORDER BY created_at DESC")
+    .all(session.user.email) as Project[];
 
   const statsStmt = db.prepare(
     "SELECT COUNT(*) as count, MAX(created_at) as latest FROM items WHERE project_id = ?"
@@ -38,6 +44,11 @@ export async function GET() {
 }
 
 export async function POST(req: NextRequest) {
+  const session = await auth();
+  if (!session?.user?.email) {
+    return NextResponse.json({ error: "not signed in" }, { status: 401 });
+  }
+
   const body = await req.json();
   const name = (body.name as string | undefined)?.trim();
   const description = (body.description as string | undefined)?.trim() || null;
@@ -56,11 +67,20 @@ export async function POST(req: NextRequest) {
     documentation_generated_at: null,
     custom_theme: null,
     voice,
+    owner_email: session.user.email,
+    product_description: null,
   };
 
   db.prepare(
-    "INSERT INTO projects (id, name, description, created_at, voice) VALUES (?, ?, ?, ?, ?)"
-  ).run(project.id, project.name, project.description, project.created_at, project.voice);
+    "INSERT INTO projects (id, name, description, created_at, voice, owner_email) VALUES (?, ?, ?, ?, ?, ?)"
+  ).run(
+    project.id,
+    project.name,
+    project.description,
+    project.created_at,
+    project.voice,
+    project.owner_email
+  );
 
   return NextResponse.json({ project }, { status: 201 });
 }

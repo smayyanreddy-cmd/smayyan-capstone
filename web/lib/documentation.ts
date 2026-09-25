@@ -31,11 +31,15 @@ export async function generateDocumentation(
       ? `Write from the creators' own first-person-plural point of view — "we" — as if the team behind "${project.name}" is narrating its own evolution. Never refer to them in the third person ("the creators", "the team") or use passive/impersonal framing ("the project evolved"); write "we" did things.`
       : `Write from the creator's own first-person point of view — "I" — as if the person behind "${project.name}" is narrating their own evolution. Never refer to them in the third person ("the creator") or use passive/impersonal framing ("the project evolved"); write "I" did things.`;
 
+  const productContext = project.product_description
+    ? `\n\nThe creator also describes the product itself like this: "${project.product_description}". Let that inform what you write — you're documenting the evolution of this specific thing, not a generic creative project.`
+    : "";
+
   const prompt = `You are ghostwriting documentation of the evolution of a creative project called "${project.name}"${
     project.description ? ` (${project.description})` : ""
   }, in the voice of the person(s) who made it.
 
-${voiceInstruction}
+${voiceInstruction}${productContext}
 
 Here are its entries in chronological order, each with a short description of what it looks like and, where available, the creator's own note about it:
 

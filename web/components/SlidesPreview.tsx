@@ -1,5 +1,12 @@
 import type { Slide } from "@/lib/slides";
 import { CUSTOM_PALETTE_ID, Palette, Template, resolvePalette, resolveTemplate } from "@/lib/pptx-themes";
+import { pickSafeTintOpacity } from "@/lib/color-contrast";
+
+function alpha(a: number) {
+  return Math.round(a * 255)
+    .toString(16)
+    .padStart(2, "0");
+}
 
 function Tab({ label, palette }: { label: string; palette: Palette }) {
   return (
@@ -26,6 +33,15 @@ export default function SlidesPreview({
   const palette =
     paletteId === CUSTOM_PALETTE_ID && customPalette ? customPalette : resolvePalette(paletteId);
   const template = resolveTemplate(templateId);
+  const textColors = [palette.text, palette.muted];
+  const background =
+    palette.id === "custom"
+      ? `linear-gradient(135deg, ${palette.bg} 0%, ${palette.accent}${alpha(
+          pickSafeTintOpacity(palette.bg, palette.accent, textColors)
+        )} 55%, ${palette.accentSecondary}${alpha(
+          pickSafeTintOpacity(palette.bg, palette.accentSecondary, textColors)
+        )} 100%)`
+      : palette.bg;
 
   return (
     <div className="flex flex-col gap-6">
@@ -33,7 +49,7 @@ export default function SlidesPreview({
         <div
           key={i}
           className="relative aspect-video w-full overflow-hidden rounded-2xl border-[2.5px] shadow-brutal"
-          style={{ background: palette.bg, borderColor: palette.border }}
+          style={{ background, borderColor: palette.border }}
         >
           {slide.type === "title" && (
             <div className="relative flex h-full flex-col justify-center overflow-hidden px-[6%]">

@@ -1,9 +1,10 @@
 import { NextResponse } from "next/server";
-import db, { Item, Project } from "@/lib/db";
+import db, { Item } from "@/lib/db";
 import { buildDocumentationPptx } from "@/lib/pptx";
 import { CUSTOM_PALETTE_ID, Palette } from "@/lib/pptx-themes";
 import { Density } from "@/lib/slides";
 import { ensureCroppedImages } from "@/lib/subject-crop";
+import { requireOwnedProject } from "@/lib/authz";
 
 export async function GET(
   req: Request,
@@ -15,12 +16,10 @@ export async function GET(
   const paletteId = searchParams.get("palette");
   const density = (searchParams.get("density") as Density | null) ?? "full";
 
-  const project = db.prepare("SELECT * FROM projects WHERE id = ?").get(id) as
-    | Project
-    | undefined;
-  if (!project) {
-    return NextResponse.json({ error: "project not found" }, { status: 404 });
-  }
+  const result = await requireOwnedProject(id);
+  if ("error" in result) return result.error;
+  const { project } = result;
+
   if (!project.documentation) {
     return NextResponse.json(
       { error: "generate the documentation first" },

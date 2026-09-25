@@ -1,7 +1,8 @@
 import fs from "fs";
 import { NextResponse } from "next/server";
-import db, { Item, Project, Voice } from "@/lib/db";
+import db, { Item, Voice } from "@/lib/db";
 import { absolutePathForUrl } from "@/lib/storage";
+import { requireOwnedProject } from "@/lib/authz";
 
 export async function GET(
   _req: Request,
@@ -9,12 +10,9 @@ export async function GET(
 ) {
   const { id } = await params;
 
-  const project = db.prepare("SELECT * FROM projects WHERE id = ?").get(id) as
-    | Project
-    | undefined;
-  if (!project) {
-    return NextResponse.json({ error: "not found" }, { status: 404 });
-  }
+  const result = await requireOwnedProject(id);
+  if ("error" in result) return result.error;
+  const { project } = result;
 
   const items = db
     .prepare("SELECT * FROM items WHERE project_id = ? ORDER BY sort_order ASC")
@@ -29,12 +27,9 @@ export async function PATCH(
 ) {
   const { id } = await params;
 
-  const project = db.prepare("SELECT * FROM projects WHERE id = ?").get(id) as
-    | Project
-    | undefined;
-  if (!project) {
-    return NextResponse.json({ error: "not found" }, { status: 404 });
-  }
+  const result = await requireOwnedProject(id);
+  if ("error" in result) return result.error;
+  const { project } = result;
 
   const body = await req.json();
   if (body.voice !== "personal" && body.voice !== "group") {
@@ -53,12 +48,8 @@ export async function DELETE(
 ) {
   const { id } = await params;
 
-  const project = db.prepare("SELECT * FROM projects WHERE id = ?").get(id) as
-    | Project
-    | undefined;
-  if (!project) {
-    return NextResponse.json({ error: "not found" }, { status: 404 });
-  }
+  const result = await requireOwnedProject(id);
+  if ("error" in result) return result.error;
 
   const items = db.prepare("SELECT * FROM items WHERE project_id = ?").all(id) as Item[];
   for (const item of items) {

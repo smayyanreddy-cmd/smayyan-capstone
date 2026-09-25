@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
-import db, { Item, Project } from "@/lib/db";
+import db, { Item } from "@/lib/db";
 import { generateDocumentation } from "@/lib/documentation";
 import { ensureCroppedImages } from "@/lib/subject-crop";
+import { requireOwnedProject } from "@/lib/authz";
 
 export async function POST(
   _req: Request,
@@ -9,12 +10,9 @@ export async function POST(
 ) {
   const { id } = await params;
 
-  const project = db.prepare("SELECT * FROM projects WHERE id = ?").get(id) as
-    | Project
-    | undefined;
-  if (!project) {
-    return NextResponse.json({ error: "project not found" }, { status: 404 });
-  }
+  const result = await requireOwnedProject(id);
+  if ("error" in result) return result.error;
+  const { project } = result;
 
   const items = db
     .prepare("SELECT * FROM items WHERE project_id = ? ORDER BY sort_order ASC")

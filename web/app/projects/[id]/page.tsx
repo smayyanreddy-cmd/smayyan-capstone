@@ -34,6 +34,10 @@ export default function ProjectPage() {
   const [file, setFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
   const [related, setRelated] = useState<RelatedItem[] | null>(null);
+  const [moveSuggestion, setMoveSuggestion] = useState<{ item: Item; target: RelatedItem } | null>(
+    null
+  );
+  const [moving, setMoving] = useState(false);
   const [expanded, setExpanded] = useState<Item | null>(null);
   const [voicePickerOpen, setVoicePickerOpen] = useState(false);
   const [savingVoice, setSavingVoice] = useState(false);
@@ -113,7 +117,30 @@ export default function ProjectPage() {
     setFile(null);
     setUploading(false);
     setRelated(data.related);
+
+    const crossProjectMatch = (data.related as RelatedItem[] | undefined)?.find(
+      (r) => r.project_id !== id
+    );
+    setMoveSuggestion(
+      crossProjectMatch && data.item ? { item: data.item, target: crossProjectMatch } : null
+    );
+
     load();
+  }
+
+  async function moveToSuggestedProject() {
+    if (!moveSuggestion) return;
+    setMoving(true);
+    const res = await fetch(`/api/projects/${id}/items/${moveSuggestion.item.id}/move`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ targetProjectId: moveSuggestion.target.project_id }),
+    });
+    setMoving(false);
+    if (res.ok) {
+      setMoveSuggestion(null);
+      load();
+    }
   }
 
   if (!project) {
@@ -247,11 +274,48 @@ export default function ProjectPage() {
             className="press-brutal flex h-12 items-center justify-center gap-2 rounded-xl border-[2.5px] border-border bg-accent font-extrabold text-accent-foreground shadow-brutal disabled:opacity-40"
           >
             <span className="material-symbols-outlined text-[20px]">auto_awesome</span>
-            {uploading ? "Logging…" : "Log Entry & Find Matches"}
+            {uploading ? "Logging…" : "Log Entry"}
           </button>
           {uploading && <div className="pixel-progress" />}
         </form>
       </section>
+
+      {/* Move-to-other-project suggestion */}
+      {moveSuggestion && (
+        <section className="mt-6 rounded-2xl border-[2.5px] border-border bg-accent-green/20 p-4 shadow-brutal-sm">
+          <div className="flex items-start gap-3">
+            <span className="material-symbols-outlined mt-0.5 shrink-0 text-[22px] text-accent-foreground">
+              flare
+            </span>
+            <div className="flex-1">
+              <p className="text-[13px] font-bold text-foreground">
+                This looks like it belongs in &ldquo;{moveSuggestion.target.project_name}&rdquo; (
+                {(moveSuggestion.target.similarity * 100).toFixed(0)}% match) instead of{" "}
+                &ldquo;{project.name}&rdquo;.
+              </p>
+              <p className="mt-1 text-[12px] text-muted">
+                Move this entry there, or keep it here — either way it stays in your timeline.
+              </p>
+              <div className="mt-3 flex gap-2">
+                <button
+                  onClick={moveToSuggestedProject}
+                  disabled={moving}
+                  className="press-brutal rounded-xl border-2 border-border bg-accent px-3.5 py-2 font-mono text-[11px] font-bold text-accent-foreground shadow-brutal-sm disabled:opacity-40"
+                >
+                  {moving ? "Moving…" : `Move to "${moveSuggestion.target.project_name}"`}
+                </button>
+                <button
+                  onClick={() => setMoveSuggestion(null)}
+                  disabled={moving}
+                  className="press-brutal rounded-xl border-2 border-border bg-surface px-3.5 py-2 font-mono text-[11px] font-bold text-foreground shadow-brutal-sm disabled:opacity-40"
+                >
+                  Keep here
+                </button>
+              </div>
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* Related past pieces */}
       {related && related.length > 0 && (

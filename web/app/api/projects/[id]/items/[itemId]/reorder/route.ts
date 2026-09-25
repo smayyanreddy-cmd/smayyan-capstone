@@ -1,11 +1,15 @@
 import { NextResponse } from "next/server";
 import db, { Item } from "@/lib/db";
+import { requireOwnedProject } from "@/lib/authz";
 
 export async function PATCH(
   req: Request,
   { params }: { params: Promise<{ id: string; itemId: string }> }
 ) {
   const { id: projectId, itemId } = await params;
+
+  const result = await requireOwnedProject(projectId);
+  if ("error" in result) return result.error;
 
   const body = await req.json();
   if (body.direction !== "earlier" && body.direction !== "later") {

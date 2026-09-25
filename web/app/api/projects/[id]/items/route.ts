@@ -2,10 +2,11 @@ import { randomUUID } from "crypto";
 import fs from "fs";
 import path from "path";
 import { NextResponse } from "next/server";
-import db, { Item, Project } from "@/lib/db";
+import db, { Item } from "@/lib/db";
 import { cosineSimilarity, embedImage } from "@/lib/embeddings";
 import { describeItem } from "@/lib/describe";
 import { UPLOADS_DIR, uploadUrl } from "@/lib/storage";
+import { requireOwnedProject } from "@/lib/authz";
 
 const RELATED_COUNT = 3;
 
@@ -15,12 +16,9 @@ export async function POST(
 ) {
   const { id: projectId } = await params;
 
-  const project = db.prepare("SELECT * FROM projects WHERE id = ?").get(projectId) as
-    | Project
-    | undefined;
-  if (!project) {
-    return NextResponse.json({ error: "project not found" }, { status: 404 });
-  }
+  const result = await requireOwnedProject(projectId);
+  if ("error" in result) return result.error;
+  const { project } = result;
 
   const form = await req.formData();
   const file = form.get("image");
@@ -63,19 +61,19 @@ export async function POST(
     sort_order: next,
   };
 
-  const related = findRelatedItems(itemId, embedding);
+  const related = findRelatedItems(itemId, embedding, project.owner_email);
 
   return NextResponse.json({ item, related }, { status: 201 });
 }
 
-function findRelatedItems(excludeItemId: string, embedding: number[]) {
+function findRelatedItems(excludeItemId: string, embedding: number[], ownerEmail: string | null) {
   const allOthers = db
     .prepare(
       `SELECT items.*, projects.name AS project_name
        FROM items JOIN projects ON items.project_id = projects.id
-       WHERE items.id != ?`
+       WHERE items.id != ? AND projects.owner_email = ?`
     )
-    .all(excludeItemId) as (Item & { project_name: string })[];
+    .all(excludeItemId, ownerEmail) as (Item & { project_name: string })[];
 
   return allOthers
     .map((other) => ({

@@ -4,6 +4,7 @@ import type { Item, Project } from "@/lib/db";
 import { buildSlidePlan, Density } from "@/lib/slides";
 import { absolutePathForUrl } from "@/lib/storage";
 import { Palette, resolvePalette, resolveTemplate } from "@/lib/pptx-themes";
+import { buildGradientBackgroundDataUri } from "@/lib/gradient";
 
 const W = 13.33;
 const H = 7.5;
@@ -111,10 +112,13 @@ export async function buildDocumentationPptx(
   const slides = buildSlidePlan(project, items, documentation, options?.density ?? "full");
   const total = slides.length;
 
+  const gradientBackground =
+    palette.id === "custom" ? await buildGradientBackgroundDataUri(palette) : null;
+
   slides.forEach((slide, i) => {
     const pageNum = i + 1;
     const s = pptx.addSlide();
-    s.background = { color: c(palette.bg) };
+    s.background = gradientBackground ? { data: gradientBackground } : { color: c(palette.bg) };
 
     if (slide.type === "title") {
       addTab(s, pptx, palette, "EVOLUTION_DOC.LOG");

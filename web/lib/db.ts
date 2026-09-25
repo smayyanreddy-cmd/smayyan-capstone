@@ -58,6 +58,17 @@ if (!projectColumns.includes("custom_theme")) {
 if (!projectColumns.includes("voice")) {
   db.exec("ALTER TABLE projects ADD COLUMN voice TEXT NOT NULL DEFAULT 'personal'");
 }
+if (!projectColumns.includes("product_description")) {
+  db.exec("ALTER TABLE projects ADD COLUMN product_description TEXT");
+}
+if (!projectColumns.includes("owner_email")) {
+  db.exec("ALTER TABLE projects ADD COLUMN owner_email TEXT");
+  // Projects created before accounts existed had no owner recorded — assign
+  // them to the account the user identified as their original creator.
+  db.exec(
+    `UPDATE projects SET owner_email = 'smayyan.reddy@flame.edu.in' WHERE owner_email IS NULL`
+  );
+}
 
 export type Voice = "personal" | "group";
 
@@ -70,6 +81,8 @@ export type Project = {
   documentation_generated_at: string | null;
   custom_theme: string | null;
   voice: Voice;
+  owner_email: string | null;
+  product_description: string | null;
 };
 
 export type Item = {
