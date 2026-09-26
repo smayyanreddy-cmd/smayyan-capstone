@@ -42,6 +42,8 @@ export default function ProjectPage() {
   const [voicePickerOpen, setVoicePickerOpen] = useState(false);
   const [savingVoice, setSavingVoice] = useState(false);
   const [reorderingId, setReorderingId] = useState<string | null>(null);
+  const [regenerating, setRegenerating] = useState(false);
+  const [regenerateConfirmOpen, setRegenerateConfirmOpen] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<Item | null>(null);
   const [deletingItemId, setDeletingItemId] = useState<string | null>(null);
 
@@ -95,6 +97,15 @@ export default function ProjectPage() {
       setItems((prev) => prev.filter((i) => i.id !== item.id));
       setDeletingItemId(null);
     }, 600);
+  }
+
+  async function regenerateAll() {
+    setRegenerateConfirmOpen(false);
+    setRegenerating(true);
+    const res = await fetch(`/api/projects/${id}/items/regenerate`, { method: "POST" });
+    const data = await res.json();
+    setRegenerating(false);
+    if (res.ok) setItems(data.items);
   }
 
   async function upload(e: React.FormEvent) {
@@ -367,10 +378,25 @@ export default function ProjectPage() {
               Evolution Trajectory
             </h3>
           </div>
-          <span className="rounded-md border-2 border-border bg-surface px-2 py-0.5 font-mono text-[10px] font-bold uppercase tracking-wider text-foreground shadow-brutal-sm">
-            Reverse Chron
-          </span>
+          <div className="flex items-center gap-2">
+            {items.length > 0 && (
+              <button
+                onClick={() => setRegenerateConfirmOpen(true)}
+                disabled={regenerating}
+                className="press-brutal flex items-center gap-1 rounded-md border-2 border-border bg-surface px-2 py-0.5 font-mono text-[10px] font-bold uppercase tracking-wider text-foreground shadow-brutal-sm disabled:opacity-40"
+              >
+                <span className="material-symbols-outlined text-[13px]">
+                  {regenerating ? "hourglass_top" : "auto_awesome"}
+                </span>
+                {regenerating ? "Regenerating…" : "Regenerate All"}
+              </button>
+            )}
+            <span className="rounded-md border-2 border-border bg-surface px-2 py-0.5 font-mono text-[10px] font-bold uppercase tracking-wider text-foreground shadow-brutal-sm">
+              Reverse Chron
+            </span>
+          </div>
         </div>
+        {regenerating && <div className="pixel-progress mb-3 w-48" />}
 
         <div className="relative flex flex-col gap-6 pl-7">
           {items.length > 1 && (
@@ -498,6 +524,48 @@ export default function ProjectPage() {
               {expanded.phrase && (
                 <p className="italic text-zinc-400">&ldquo;{expanded.phrase}&rdquo;</p>
               )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {regenerateConfirmOpen && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-6"
+          onClick={() => setRegenerateConfirmOpen(false)}
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="flex w-full max-w-sm flex-col gap-4 rounded-2xl border-[2.5px] border-border bg-surface p-5 shadow-brutal-lg"
+          >
+            <div className="flex items-center gap-2.5">
+              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border-2 border-border bg-accent/20">
+                <span className="material-symbols-outlined text-[20px] text-accent-purple-deep">
+                  auto_awesome
+                </span>
+              </span>
+              <h3 className="text-[16px] font-extrabold leading-snug text-foreground">
+                Regenerate all descriptions?
+              </h3>
+            </div>
+            <p className="text-[13px] font-medium text-foreground/75">
+              This asks Gemini to re-write the AI synthesis for all {items.length}{" "}
+              {items.length === 1 ? "entry" : "entries"} in this project, replacing the current
+              descriptions. Notes are kept as-is.
+            </p>
+            <div className="flex gap-2.5">
+              <button
+                onClick={() => setRegenerateConfirmOpen(false)}
+                className="press-brutal flex-1 rounded-xl border-2 border-border bg-surface-inset px-4 py-2.5 text-sm font-bold text-foreground shadow-brutal-sm"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={regenerateAll}
+                className="press-brutal flex-1 rounded-xl border-2 border-border bg-accent px-4 py-2.5 text-sm font-extrabold text-accent-foreground shadow-brutal-sm"
+              >
+                Regenerate
+              </button>
             </div>
           </div>
         </div>

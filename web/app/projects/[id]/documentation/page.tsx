@@ -213,7 +213,7 @@ export default function DocumentationPage() {
                   <div style={{ background: p.text }} />
                 </div>
               </div>
-              <span className="text-center text-[10px] font-bold leading-tight text-foreground">
+              <span className="text-center text-[10px] font-bold leading-tight text-page-foreground">
                 {p.label}
               </span>
             </button>
@@ -248,7 +248,7 @@ export default function DocumentationPage() {
                 </span>
               )}
             </div>
-            <span className="text-center text-[10px] font-bold leading-tight text-foreground">
+            <span className="text-center text-[10px] font-bold leading-tight text-page-foreground">
               {customPalette?.label ?? "Custom"}
             </span>
           </button>
